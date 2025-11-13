@@ -5,7 +5,7 @@ import * as T from "./testutil"
 function passes(strict: boolean, ty: V.SmartType, ...x: unknown[]) {
     for (const y of x) {
         try {
-            T.be(ty.input(y, strict), y)
+            T.eq(ty.input(y, strict), y)
         } catch (e) {
             throw new Error(
                 `Expected validation to succeed for value: ${JSON.stringify(y)} ` +
@@ -135,6 +135,25 @@ test('smart string', () => {
     T.eq(ty.input("12foo12"), "12foo24")
     T.eq(ty.input("foo0"), "foo0", "string wasn't changed, but also the pattern wasn't missing")
 
+})
+
+test('smart array', () => {
+    let ty = V.ARRAY(V.NUM())
+    T.eq(ty.description, "number[]")
+
+    // strict
+    passes(true, ty, [], [1], [2, 1])
+    fails(true, ty, undefined, null, false, true, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, "", "a", "foo bar", "0", "123", "12bar", [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 })
+
+    // not strict
+    passes(true, ty, [], [1], [2, 1])
+    fails(true, ty, undefined, null, false, true, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, "", "a", "foo bar", "0", "123", "12bar", [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 })
+    T.eq(ty.input([12, "34", true], false), [12, 34, 1])
+
+    // min length
+    ty = V.ARRAY(V.NUM()).minLen(3)
+    passes(true, ty, [1, 2, 3], [4, 3, 2, -1])
+    fails(true, ty, [], [1], [2, 1])
 })
 
 test('primative marshalling', () => {

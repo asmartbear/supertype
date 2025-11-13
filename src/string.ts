@@ -1,4 +1,4 @@
-import { NOOP_TRANSFORM, ValidationError, INativeParser, SmartType } from "./common"
+import { ValidationError, INativeParser, SmartType } from "./common"
 
 class SmartString<INPUT> extends SmartType<INPUT, string, string> {
 
@@ -65,7 +65,7 @@ class NativeString implements INativeParser<string> {
 
 /** Generic string */
 export function STR() {
-    return new SmartString(NativeString.SINGLETON, NativeString.SINGLETON.description, NOOP_TRANSFORM)
+    return new SmartString(NativeString.SINGLETON)
 }
 
 

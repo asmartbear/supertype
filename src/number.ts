@@ -1,4 +1,4 @@
-import { NOOP_TRANSFORM, ValidationError, INativeParser, SmartType } from "./common"
+import { ValidationError, INativeParser, SmartType } from "./common"
 
 class SmartNumber<INPUT> extends SmartType<INPUT, number, number> {
 
@@ -64,5 +64,5 @@ class NativeNumber implements INativeParser<number> {
 
 /** Simple number */
 export function NUM() {
-    return new SmartNumber(NativeNumber.SINGLETON, NativeNumber.SINGLETON.description, NOOP_TRANSFORM)
+    return new SmartNumber(NativeNumber.SINGLETON)
 }
