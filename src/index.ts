@@ -24,17 +24,17 @@ export class ValidationError extends Error {
         this.myMessage = msg
     }
 
-    addPath(segment: string | number | symbol | undefined | null) {
-        this.path.push(String(segment));
-        this.message = this.fullMessage
-    }
+    // addPath(segment: string | number | symbol | undefined | null) {
+    //     this.path.push(String(segment));
+    //     this.message = this.fullMessage
+    // }
 
-    get fullMessage(): string {
-        const pathStr = this.path.length
-            ? `At key [${this.path.reverse().join('.')}]: `
-            : '';
-        return pathStr + this.myMessage;
-    }
+    // get fullMessage(): string {
+    //     const pathStr = this.path.length
+    //         ? `At key [${this.path.reverse().join('.')}]: `
+    //         : '';
+    //     return pathStr + this.myMessage;
+    // }
 }
 
 /**
@@ -56,7 +56,7 @@ interface INativeParser<T> {
      * @returns the validated value.
      * @throws {ValidationError} If the input is invalid
      */
-    input(x: unknown, strict?: boolean): T
+    input(x: unknown, strict: boolean): T
 }
 
 /**
@@ -89,7 +89,9 @@ export abstract class SmartType<INPUT, T> implements INativeParser<T> {
         try {
             return this.input(x, strict)
         } catch (e) {
+            // istanbul ignore next
             if (e instanceof ValidationError) return e
+            // istanbul ignore next
             throw e
         }
     }
@@ -130,7 +132,7 @@ class SmartNumberBuilder<INPUT> extends SmartType<INPUT, number> {
 class NativeNumber implements INativeParser<number> {
     public readonly description = "number"
 
-    input(x: unknown, strict: boolean = true): number {
+    input(x: unknown, strict: boolean): number {
         if (typeof x === "number") return x
         if (!strict) {
             if (typeof x === "boolean") {
@@ -167,10 +169,10 @@ class SmartStringBuilder<INPUT> extends SmartType<INPUT, string> {
 class NativeString implements INativeParser<string> {
     public readonly description = "string"
 
-    input(x: unknown, strict: boolean = true): string {
+    input(x: unknown, strict: boolean): string {
         if (typeof x === "string") return x
         if (!strict) {
-            if (typeof x === "boolean" || typeof x === "number") return String(x)
+            return String(x)
         }
         throw new ValidationError(this, x)
     }

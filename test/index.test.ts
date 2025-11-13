@@ -19,6 +19,7 @@ function passes(strict: boolean, ty: V.SmartType<any, any>, ...x: unknown[]) {
 function fails(strict: boolean, a: V.SmartType<any, any>, ...x: unknown[]) {
     for (const y of x) {
         T.throws(() => a.input(y, strict), V.ValidationError, JSON.stringify(y))
+        T.eq(a.inputReturnError(y, strict) instanceof V.ValidationError, true)
     }
 }
 
@@ -40,25 +41,19 @@ test('smart number', () => {
     T.be(ty.input("-2.3", false), -2.3)
 
     // min-limit
-    {
-        const ty = V.NUM().min(3)
-        passes(true, ty, 3, 4, 5, 6, Number.POSITIVE_INFINITY)
-        fails(true, ty, -10, 0, 1, 2, 2.999, Number.NEGATIVE_INFINITY, Number.NaN)
-    }
+    ty = V.NUM().min(3)
+    passes(true, ty, 3, 4, 5, 6, Number.POSITIVE_INFINITY)
+    fails(true, ty, -10, 0, 1, 2, 2.999, Number.NEGATIVE_INFINITY, Number.NaN)
 
     // max-limit
-    {
-        const ty = V.NUM().max(3)
-        passes(true, ty, -10, 0, 1, 2, 2.999, 3, Number.NEGATIVE_INFINITY)
-        fails(true, ty, 3.00001, 4, 5, 6, Number.POSITIVE_INFINITY, Number.NaN)
-    }
+    ty = V.NUM().max(3)
+    passes(true, ty, -10, 0, 1, 2, 2.999, 3, Number.NEGATIVE_INFINITY)
+    fails(true, ty, 3.00001, 4, 5, 6, Number.POSITIVE_INFINITY, Number.NaN)
 
     // double-limit
-    {
-        const ty = V.NUM().min(0).max(10)
-        passes(true, ty, 0, 1, 2, 2.999, 10)
-        fails(true, ty, -Number.EPSILON, 10.001, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN)
-    }
+    ty = V.NUM().min(0).max(10)
+    passes(true, ty, 0, 1, 2, 2.999, 10)
+    fails(true, ty, -Number.EPSILON, 10.001, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN)
 })
 
 test('number clamped', () => {
@@ -71,4 +66,38 @@ test('number clamped', () => {
     T.be(ty.input(10), 10)
     T.be(ty.input(10 + Number.EPSILON), 10)
     T.be(ty.input(123), 10)
+    ty = V.NUM().clamp(undefined, 10)
+    T.be(ty.input(-5), -5)
+    T.be(ty.input(5), 5)
+    T.be(ty.input(15), 10)
+    ty = V.NUM().clamp(0, undefined)
+    T.be(ty.input(-5), 0)
+    T.be(ty.input(5), 5)
+    T.be(ty.input(15), 15)
+})
+
+test('smart string', () => {
+    let ty = V.STR()
+    T.eq(ty.description, "string")
+
+    // strict
+    passes(true, ty, "", "a", "foo bar")
+    fails(true, ty, undefined, null, false, true, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, [], [1], [2, 1], [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 })
+
+    // not strict
+    passes(true, ty, "", "a", "foo bar")
+    T.be(ty.input(undefined, false), "undefined")
+    T.be(ty.input(null, false), "null")
+    T.be(ty.input(false, false), "false")
+    T.be(ty.input(true, false), "true")
+    T.be(ty.input(0, false), "0")
+    T.be(ty.input(-12.34, false), "-12.34")
+    T.be(ty.input(Number.POSITIVE_INFINITY, false), "Infinity")
+    T.be(ty.input(Number.NEGATIVE_INFINITY, false), "-Infinity")
+    T.be(ty.input(Number.NaN, false), "NaN")
+
+    // minimum length
+    ty = V.STR().minLen(5)
+    passes(true, ty, "seven", "eighty")
+    fails(true, ty, "", "1", "12", "two", "four")
 })
