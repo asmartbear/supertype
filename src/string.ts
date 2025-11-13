@@ -11,10 +11,24 @@ class SmartString<INPUT> extends SmartType<INPUT, string> {
     }
 
     /** Validate that the string matches a regualar expression */
-    re(re: RegExp) {
+    match(re: RegExp) {
         return new SmartString(this,
             `re=${re}`,
             (s) => { if (!re.test(s)) throw new ValidationError(this, s); return s }
+        )
+    }
+
+    /** Make regex replacement, optionally failing if there is nothing to replace */
+    replace(re: RegExp, replacement: string | ((substring: string, ...args: string[]) => string), failIfNoMatches: boolean = false) {
+        return new SmartString(this,
+            `re=${re}->${typeof replacement === "string" ? replacement : "[function]"}`,
+            (s) => {
+                const result = s.replaceAll(re, replacement as any)
+                if (failIfNoMatches && result == s) {        // if changed, it cannot be a match failure
+                    if (!s.match(re)) throw new ValidationError(this, s, "No match")
+                }
+                return result
+            }
         )
     }
 }

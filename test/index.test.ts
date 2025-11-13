@@ -101,8 +101,28 @@ test('smart string', () => {
     passes(true, ty, "seven", "eighty")
     fails(true, ty, "", "1", "12", "two", "four")
 
-    // regex
-    ty = V.STR().re(/[a-zA-Z]+[0-9]+$/)
+    // regex match
+    ty = V.STR().match(/[a-zA-Z]+[0-9]+$/)
     passes(true, ty, "foo1", "bar321", "taco/good123")
     fails(true, ty, "foo", "321bar", "taco123/good")
+
+    // regex replace; don't care if missing
+    ty = V.STR().replace(/([a-zA-Z]+)([0-9]+)$/g, '$2$1')
+    T.eq(ty.input("foo"), "foo")
+    T.eq(ty.input("12foo"), "12foo")
+    T.eq(ty.input("foo12"), "12foo")
+    ty = V.STR().replace(/([a-zA-Z]+)([0-9]+)$/g, (_, pre, dig) => pre + (parseInt(dig) * 2))
+    T.eq(ty.input("foo"), "foo")
+    T.eq(ty.input("foo12"), "foo24")
+    T.eq(ty.input("12foo"), "12foo")
+    T.eq(ty.input("12foo12"), "12foo24")
+
+    // regex replace; do care if missing
+    ty = V.STR().replace(/([a-zA-Z]+)([0-9]+)$/g, (_, pre, dig) => pre + (parseInt(dig) * 2), true)
+    T.throws(() => ty.input("foo"), V.ValidationError)
+    T.eq(ty.input("foo12"), "foo24")
+    T.throws(() => ty.input("12foo"), V.ValidationError)
+    T.eq(ty.input("12foo12"), "12foo24")
+    T.eq(ty.input("foo0"), "foo0", "string wasn't changed, but also the pattern wasn't missing")
+
 })
