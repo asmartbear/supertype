@@ -2,7 +2,7 @@ import * as V from "../src/index"
 import * as T from "./testutil"
 
 /** These values pass validation and are identical in their final form. */
-function passes(strict: boolean, ty: V.SmartType<unknown>, ...x: unknown[]) {
+function passes(strict: boolean, ty: V.SmartType<any, any>, ...x: unknown[]) {
     for (const y of x) {
         try {
             T.be(ty.input(y, strict), y)
@@ -16,7 +16,7 @@ function passes(strict: boolean, ty: V.SmartType<unknown>, ...x: unknown[]) {
 }
 
 /** These value fail validation. */
-function fails(strict: boolean, a: V.SmartType<unknown>, ...x: unknown[]) {
+function fails(strict: boolean, a: V.SmartType<any, any>, ...x: unknown[]) {
     for (const y of x) {
         T.throws(() => a.input(y, strict), V.ValidationError, JSON.stringify(y))
     }
