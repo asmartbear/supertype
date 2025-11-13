@@ -1,0 +1,79 @@
+{
+  "name": "@asmartbear/supertype",
+  "version": "1.0.1",
+  "description": "Data types that parse, validate, transform, marshal, compare, and hash",
+  "keywords": [
+    "json"
+  ],
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "test": "jest --runInBand",
+    "watch": "npm test -- --watchAll --coverage",
+    "coverage": "npm test -- --coverage",
+    "postcoverage": "open-cli coverage/lcov-report/index.html",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "build": "tsc",
+    "main": "tsc && node dist/index.js",
+    "minify": "uglifyjs --compress --mangle --output dist/index.min.js -- dist/index.js",
+    "postbuild": "npm run minify",
+    "prerelease": "npm test && npm run build",
+    "prepare": "npm test && npm run build",
+    "release": "standard-version",
+    "postpublish": "git push origin main --follow-tags"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.10.0",
+    "benchmark": "^2.1.4",
+    "jest": "^30.2.0",
+    "open-cli": "^8.0.0",
+    "rimraf": "^6.1.0",
+    "standard-version": "^9.5.0",
+    "ts-jest": "^29.4.5",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3"
+  },
+  "license": "MIT",
+  "repository": {
+    "url": "git@github.com:asmartbear/supertype.git",
+    "type": "git"
+  },
+  "bugs": {
+    "url": "https://github.com/asmartbear/supertype/issues"
+  },
+  "author": {
+    "name": "Jason Cohen",
+    "url": "https://github.com/asmartbear"
+  },
+  "main": "dist/index.min.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist",
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "cache": true,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "test/.+\\.(ts|tsx|js)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/",
+      "/test/testutil.ts"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/",
+      "/test/"
+    ]
+  }
+}
