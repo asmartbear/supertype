@@ -4,7 +4,7 @@ class SmartMap<
     K, V,
     KEY extends SmartType<K>,
     VALUE extends SmartType<V>
-> extends SmartType<Map<K, V>, JSONType> {
+> extends SmartType<Map<K, V>, [JsonFor<KEY>, JsonFor<VALUE>][]> {
 
     // We carry along the smart type belonging to the array elements.
     constructor(
@@ -27,8 +27,8 @@ class SmartMap<
         return new Map(Object.entries(x).map(([k, v]) => [this.tKey.input(k, strict), this.tValue.input(v, strict)] as const))
     }
 
-    toJSON(x: Map<K, V>): JSONType {
-        return Array.from(x.entries()).map(([k, v]) => [this.tKey.toJSON(k), this.tValue.toJSON(v)] as const)
+    toJSON(x: Map<K, V>): [JsonFor<KEY>, JsonFor<VALUE>][] {
+        return Array.from(x.entries()).map(([k, v]) => [this.tKey.toJSON(k), this.tValue.toJSON(v)] as const) as any
     }
 
     fromJSON(js: JSONType): Map<K, V> {
