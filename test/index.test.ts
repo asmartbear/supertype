@@ -37,6 +37,7 @@ test('smart number', () => {
     // strict
     passes(true, ty, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN)
     fails(true, ty, undefined, null, false, true, "", "a", "foo bar", "0", "123", "12bar", [], [1], [2, 1], [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 })
+    T.be(ty.input(-0), -0)      // might be nice to fix this?
 
     // not strict
     passes(false, ty, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN)
@@ -101,6 +102,7 @@ test('smart string', () => {
     // strict
     passes(true, ty, "", "a", "foo bar", "foo\nbar")
     fails(true, ty, undefined, null, false, true, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, [], [1], [2, 1], [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 })
+    T.be(ty.input("\n"), "\n")
 
     // not strict
     passes(true, ty, "", "a", "foo bar", "foo\nbar")
@@ -224,6 +226,4 @@ test('smart tuple of 2', () => {
     T.throws(() => ty.fromJSON(["123", "123"] as any))
     T.throws(() => ty.fromJSON({} as any))
     T.throws(() => ty.fromJSON(true as any))
-    // T.throws(() => ty.fromJSON({ t: "foo", x: 123 }))
-    // T.throws(() => ty.toJSON(true as any))
 })

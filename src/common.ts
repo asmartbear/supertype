@@ -143,9 +143,15 @@ export function transformer<T, TYPE extends SmartType<T>>(
 }
 
 /**
- * Extracts the native type out of a SmartType.
+ * Extracts the native type out of a SmartType, or the union of native types
+ * if given an array of SmartTypes.
  */
 export type NativeFor<ST> =
     ST extends SmartType<infer T, any> ? T
     : ST extends SmartType<any, any>[] ? NativeFor<ValuesOf<ST>>
     : never;
+
+/** From a tuple of SmartType, gives a tuple of the native types */
+export type NativeTupleFor<T extends readonly SmartType<any, any>[]> = {
+    [K in keyof T]: T[K] extends SmartType<infer U, any> ? U : never;
+};
