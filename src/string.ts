@@ -2,8 +2,6 @@ import { ValidationError, SmartType, transformer } from "./common"
 
 class SmartString extends SmartType<string, string> {
 
-    static SINGLETON = new SmartString()
-
     constructor() {
         super("string")
     }
@@ -64,7 +62,7 @@ class SmartString extends SmartType<string, string> {
 
 /** Generic string */
 export function STR() {
-    return SmartString.SINGLETON
+    return new SmartString()
 }
 
 

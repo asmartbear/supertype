@@ -3,8 +3,6 @@ import { ValidationError, SmartType, transformer } from "./common"
 /** The native `number` type */
 class SmartNumber extends SmartType<number, number | string> {
 
-    static SINGLETON = new SmartNumber()
-
     constructor() {
         super("number")
     }
@@ -72,5 +70,5 @@ class SmartNumber extends SmartType<number, number | string> {
 
 /** Simple number */
 export function NUM() {
-    return SmartNumber.SINGLETON
+    return new SmartNumber()
 }

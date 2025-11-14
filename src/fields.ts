@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, JSONType, NativeObjectFor } from "./common"
+import { ValidationError, SmartType, JSONType, NativeObjectFor, __DEFAULT_VALUE } from "./common"
 
 class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends SmartType<NativeObjectFor<ST>, { readonly [K: string]: JSONType }> {
 
@@ -14,8 +14,16 @@ class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends S
         if (!x) throw new ValidationError(this, x, "Got null instead of object")
         const ent: [string, any][] = []
         for (const [k, t] of Object.entries(this.types)) {
-            if (!(k in x)) throw new ValidationError(this, x, `Missing required field [${k}]`)
-            ent.push([k, t.input((x as any)[k], strict)])
+            const y = (x as any)[k]
+            if (y === undefined) {
+                if (t[__DEFAULT_VALUE] !== undefined) {
+                    ent.push([k, t[__DEFAULT_VALUE]])
+                } else {
+                    throw new ValidationError(this, x, `Missing required field [${k}]`)
+                }
+            } else {
+                ent.push([k, t.input(y, strict)])
+            }
         }
         //  throw new ValidationError(this, x, `Found spurious field [${k}]`)
         return Object.fromEntries(ent) as NativeObjectFor<ST>

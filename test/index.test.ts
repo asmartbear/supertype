@@ -299,3 +299,17 @@ test('smart object', () => {
     toFromJSON(ty, { x: 123, s: "cool", b: true }, { x: 123, s: "cool", b: true })
 })
 
+test('smart object with defaults', () => {
+    let ty = V.OBJ({
+        x: V.NUM().def(123),
+        s: V.STR().def("hi").replace(/hi/g, "there"),
+        b: V.BOOL().def(false),
+    })
+    T.eq(ty.description, "{x:number=123,s:string=hi>>re=/hi/g->there,b:boolean=false}")
+
+    T.eq(ty.input({}), { x: 123, s: "hi", b: false }, "default means we don't run the replacement")
+    T.eq(ty.input({ s: "taco" }), { x: 123, s: "taco", b: false }, "replacement didn't match")
+    T.eq(ty.input({ s: "and hi" }), { x: 123, s: "and there", b: false }, "replacement when no default")
+    T.eq(ty.input({ b: true, s: "there" }), { x: 123, s: "there", b: true })
+})
+

@@ -1,3 +1,4 @@
+import { simplifiedToDisplay, simplify, simplifyOpaqueType } from "@asmartbear/simplified";
 
 export type JSONType = null | boolean | string | number | JSONType[] | { [K: string]: JSONType }
 
@@ -32,7 +33,7 @@ export class ValidationError extends Error {
         public path: string[] = []
     ) {
         let msg = expectedPrefix ?? "Expected " + type.description
-        msg += ` but got [${String(valueEncountered)}]`
+        msg += ` but got: ${simplifiedToDisplay(simplify(valueEncountered))}`
         super(msg);
         this.name = 'ValidationError';
         this.myMessage = msg
@@ -87,13 +88,19 @@ export interface IMarshallJson<T, J extends JSONType> {
     fromJSON(js: J): T
 }
 
+/** Symbol used for the configured default value for the type, if any. */
+export const __DEFAULT_VALUE = Symbol('__DEFAULT_VALUE')
+
 /**
  * A type capable of parsing, validating, conversion, marshalling, and more.
  * Represents a specific Typescript type on input and output.
  */
 export abstract class SmartType<T = any, J extends JSONType = JSONType> implements INativeParser<T>, IMarshallJson<T, J> {
 
-    constructor(public readonly description: string) { }
+    /** If not `undefined`, a default value to use in things like structured fields, if it is missing. */
+    [__DEFAULT_VALUE]: T | undefined = undefined
+
+    constructor(public description: string) { }
 
     /**
      * Same as `input()` but returns errors as objects rather than throwing them.
@@ -107,6 +114,13 @@ export abstract class SmartType<T = any, J extends JSONType = JSONType> implemen
             // istanbul ignore next
             throw e
         }
+    }
+
+    /** Sets the default value to use if this type isn't represent in a parent object or other structure. */
+    def(x: T): this {
+        this[__DEFAULT_VALUE] = x
+        this.description += '=' + simplifiedToDisplay(simplifyOpaqueType(x))
+        return this
     }
 
     get constructorArgs(): any[] { return [this.description] }
@@ -134,10 +148,14 @@ export function transformer<T, TYPE extends SmartType<T>>(
 ): typeof upstream {
     const UpstreamClass = upstream.constructor as ConcreteConstructor<ClassOf<typeof upstream>>;
     const cls = class extends UpstreamClass {
-        public readonly description = description
+        // Wrap the description
+        public readonly description = `${upstream.description}>>${description}`
+        // Wrap input in the transformation
         input(x: unknown, strict: boolean = true): T {
             return fTransform(upstream.input(x, strict))
         }
+        // Carry state forward
+        [__DEFAULT_VALUE] = upstream[__DEFAULT_VALUE]
     }
     return new cls(...upstream.constructorArgs) as any
 }

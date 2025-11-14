@@ -36,6 +36,9 @@
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.3"
   },
+  "dependencies": {
+    "@asmartbear/simplified": "^1.0.3"
+  },
   "license": "MIT",
   "repository": {
     "url": "git@github.com:asmartbear/supertype.git",

@@ -3,8 +3,6 @@ import { ValidationError, SmartType } from "./common"
 /** The native `boolean` type */
 class SmartBoolean extends SmartType<boolean, boolean> {
 
-    static SINGLETON = new SmartBoolean()
-
     constructor() {
         super("boolean")
     }
@@ -33,5 +31,5 @@ class SmartBoolean extends SmartType<boolean, boolean> {
 
 /** Simple boolean */
 export function BOOL() {
-    return SmartBoolean.SINGLETON
+    return new SmartBoolean()
 }
