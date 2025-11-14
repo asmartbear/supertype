@@ -13,7 +13,7 @@ class SmartAlternation<ST extends SmartType<any>[]> extends SmartType<NativeFor<
         super('(' + types.map(t => t.description).join('|') + ')')
     }
 
-    input(x: unknown, strict: boolean): NativeFor<ST> {
+    input(x: unknown, strict: boolean = true): NativeFor<ST> {
         for (const t of this.types) {
             const y = t.inputReturnError(x, strict)
             if (y instanceof ValidationError) continue

@@ -1,5 +1,6 @@
 import { Simple, simplifiedToDisplay, simplifiedToHash, simplify, simplifyOpaqueType } from "@asmartbear/simplified";
 
+export type Primative = boolean | number | string | null
 export type JSONType = null | boolean | string | number | JSONType[] | { [K: string]: JSONType } | { [K: number]: JSONType }
 export type JSONTuple = { [K: number]: JSONType }
 export type JSONObject = { [K: string]: JSONType }
@@ -200,3 +201,18 @@ export type NativeTupleFor<ST extends readonly SmartType[]> = {
 export type JsonTupleFor<ST extends readonly SmartType[]> = {
     [K in keyof ST]: JsonFor<ST[K]>;
 };
+
+/**
+ * True if the argument is a `Primative`, and tells Typescript.
+ */
+export function isPrimative(x: unknown): x is Primative {
+    switch (typeof x) {
+        case 'boolean':
+        case 'number':
+        case 'string':
+            return true
+        case 'object':
+            return x === null
+    }
+    return false
+}
