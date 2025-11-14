@@ -5,13 +5,21 @@ type AlternationJSON = {
     x: JSONType,
 }
 
-class SmartAlternation<INPUT, ST extends SmartType<any>[]> extends SmartType<INPUT, NativeFor<ST>, AlternationJSON> {
+class SmartAlternation<ST extends SmartType<any>[]> extends SmartType<NativeFor<ST>, AlternationJSON> {
 
     constructor(
         public readonly types: ST,
-        source: INativeParser<INPUT>, description?: string, transform?: (x: INPUT) => NativeFor<ST>,
     ) {
-        super(source, description, transform)
+        super('(' + types.map(t => t.description).join('|') + ')')
+    }
+
+    input(x: unknown, strict: boolean): NativeFor<ST> {
+        for (const t of this.types) {
+            const y = t.inputReturnError(x, strict)
+            if (y instanceof ValidationError) continue
+            return y
+        }
+        throw new ValidationError(this, x)
     }
 
     toJSON(x: NativeFor<ST>): AlternationJSON {
@@ -35,26 +43,7 @@ class SmartAlternation<INPUT, ST extends SmartType<any>[]> extends SmartType<INP
     }
 }
 
-/** Inputs various array-like things into an array, recursively resolving things inside that array. */
-class AlternationSource<ST extends readonly SmartType<any>[]> implements INativeParser<ValuesOf<ST>> {
-
-    constructor(public readonly types: ST) { }
-
-    get description(): string {
-        return '(' + this.types.map(t => t.description).join('|') + ')'
-    }
-
-    input(x: unknown, strict: boolean) {
-        for (const t of this.types) {
-            const y = t.inputReturnError(x, strict)
-            if (y instanceof ValidationError) continue
-            return y
-        }
-        throw new ValidationError(this, x)
-    }
-}
-
 /** Any of these types are acceptable. */
 export function OR<ST extends SmartType<any>[]>(...types: ST) {
-    return new SmartAlternation(types, new AlternationSource(types))
+    return new SmartAlternation(types)
 }

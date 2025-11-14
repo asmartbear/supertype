@@ -6,10 +6,17 @@ export type JSONType = null | boolean | string | number | JSONType[] | { [K: str
  */
 export type ValuesOf<T> = T[keyof T];
 
-/** Transform that just passes through, when we don't actually want one. */
-export function NOOP_TRANSFORM<T>(x: T): typeof x {
-    return x
-}
+/**
+ * Given a type, returns the Class of that type.
+ */
+export type ClassOf<T> = (new (...args: any[]) => T);
+
+/**
+ * Given a class, returns the instance-type that it creates.
+ */
+export type InstanceOf<C> = C extends new (...args: any[]) => infer T ? T : never;
+
+type ConcreteConstructor<T = {}> = new (...args: any[]) => T;
 
 /**
  * The exception thrown when `input()` goes wrong.  Includes the fundamental problem,
@@ -19,7 +26,7 @@ export class ValidationError extends Error {
     private readonly myMessage: string
 
     constructor(
-        type: INativeParser<any>,
+        type: IDescriptive,
         valueEncountered: any,
         expectedPrefix?: string,
         public path: string[] = []
@@ -44,14 +51,17 @@ export class ValidationError extends Error {
     // }
 }
 
+export interface IDescriptive {
+
+    /** A human-readable description of whatever this is */
+    description: string
+}
+
 /**
- * Implements a parser for a native type, converting `unknown` into the desired native type,
+ * Implements a parser for a native type, converting `unknown` into the desired native type `T`,
  * or throwing `ValidationError` if it fails.
  */
-export interface INativeParser<T> {
-
-    /** A human-readable description of the parser or type */
-    description: string
+export interface INativeParser<T> extends IDescriptive {
 
     /**
      * Attempts to convert an input value into this smart type, validating against
@@ -81,27 +91,9 @@ export interface IMarshallJson<T, J extends JSONType> {
  * A type capable of parsing, validating, conversion, marshalling, and more.
  * Represents a specific Typescript type on input and output.
  */
-export abstract class SmartType<INPUT = any, T = any, J extends JSONType = JSONType> implements INativeParser<T>, IMarshallJson<T, J> {
-    private readonly source: INativeParser<INPUT>
-    public readonly description: string
-    private readonly transform: (x: INPUT) => T
+export abstract class SmartType<T = any, J extends JSONType = JSONType> implements INativeParser<T>, IMarshallJson<T, J> {
 
-    /**
-     * Creates a transformation on top of an input type.
-     * 
-     * @param source the upstream thing that parses, validates, transforms, etc, that we're chaining onto
-     * @param description describes it for output, or `undefined` to inherit from the origin
-     * @param transform function that performs the transformation, throwing `ValidationException` if it violates a validation
-     */
-    constructor(source: INativeParser<INPUT>, description?: string, transform?: (x: INPUT) => T) {
-        this.source = source
-        this.description = description ?? source.description
-        this.transform = transform ?? (NOOP_TRANSFORM as any)
-    }
-
-    input(x: unknown, strict: boolean = true): T {
-        return this.transform(this.source.input(x, strict))
-    }
+    constructor(public readonly description: string) { }
 
     /**
      * Same as `input()` but returns errors as objects rather than throwing them.
@@ -117,14 +109,43 @@ export abstract class SmartType<INPUT = any, T = any, J extends JSONType = JSONT
         }
     }
 
+    get constructorArgs(): any[] { return [this.description] }
+
+    abstract input(x: unknown, strict?: boolean): T;
     abstract toJSON(x: T): J;
     abstract fromJSON(js: J): T;
+}
+
+/**
+ * Extends a `SmartType` base class with a new class that executes a transformation of some upstream type
+ * in its `input()`, returning something that is of the identical type to the base-class but with this
+ * transformation applied.
+ * 
+ * @param Base base-class to extend
+ * @param upstream upstream type for processing input before we apply this transformation
+ * @param description human-readable description to use for this transformation
+ * @param fTransform transformation function
+ * @returns the same type as was passed in for `Base`, but applies the changes.
+ */
+export function transformer<T, TYPE extends SmartType<T>>(
+    upstream: TYPE,
+    description: string,
+    fTransform: (x: T) => T
+): typeof upstream {
+    const UpstreamClass = upstream.constructor as ConcreteConstructor<ClassOf<typeof upstream>>;
+    const cls = class extends UpstreamClass {
+        public readonly description = description
+        input(x: unknown, strict: boolean = true): T {
+            return fTransform(upstream.input(x, strict))
+        }
+    }
+    return new cls(...upstream.constructorArgs) as any
 }
 
 /**
  * Extracts the native type out of a SmartType.
  */
 export type NativeFor<ST> =
-    ST extends SmartType<any, infer T, any> ? T
-    : ST extends SmartType<any, infer T, any>[] ? NativeFor<ValuesOf<ST>>
+    ST extends SmartType<infer T, any> ? T
+    : ST extends SmartType<any, any>[] ? NativeFor<ValuesOf<ST>>
     : never;

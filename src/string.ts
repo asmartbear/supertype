@@ -1,25 +1,39 @@
-import { ValidationError, INativeParser, SmartType } from "./common"
+import { ValidationError, SmartType, transformer } from "./common"
 
-class SmartString<INPUT> extends SmartType<INPUT, string, string> {
+class SmartString extends SmartType<string, string> {
+
+    static SINGLETON = new SmartString()
+
+    constructor() {
+        super("string")
+    }
+
+    input(x: unknown, strict: boolean = true): string {
+        if (typeof x === "string") return x
+        if (!strict) {
+            return String(x)
+        }
+        throw new ValidationError(this, x)
+    }
 
     toJSON(x: string): string {
         return x
     }
 
     fromJSON(x: string): string {
-        return this.input(x)
+        return this.input(x, true)
     }
 
     /** Validate that the string is at least this many characters. */
     minLen(min: number) {
-        return new SmartString(this,
+        return transformer<string, this>(this,
             `minLen=${min}`,
             (s) => { if (s.length < min) throw new ValidationError(this, s); return s }
         )
     }
 
     trim() {
-        return new SmartString(this,
+        return transformer<string, this>(this,
             `trim`,
             (s) => { return s.trim() }
         )
@@ -27,7 +41,7 @@ class SmartString<INPUT> extends SmartType<INPUT, string, string> {
 
     /** Validate that the string matches a regualar expression */
     match(re: RegExp) {
-        return new SmartString(this,
+        return transformer<string, this>(this,
             `re=${re}`,
             (s) => { if (!re.test(s)) throw new ValidationError(this, s); return s }
         )
@@ -35,7 +49,7 @@ class SmartString<INPUT> extends SmartType<INPUT, string, string> {
 
     /** Make regex replacement, optionally failing if there is nothing to replace */
     replace(re: RegExp, replacement: string | ((substring: string, ...args: string[]) => string), failIfNoMatches: boolean = false) {
-        return new SmartString(this,
+        return transformer<string, this>(this,
             `re=${re}->${typeof replacement === "string" ? replacement : "[function]"}`,
             (s) => {
                 const result = s.replaceAll(re, replacement as any)
@@ -48,24 +62,9 @@ class SmartString<INPUT> extends SmartType<INPUT, string, string> {
     }
 }
 
-/** Inputs anything into a number. */
-class NativeString implements INativeParser<string> {
-    public readonly description = "string"
-
-    input(x: unknown, strict: boolean): string {
-        if (typeof x === "string") return x
-        if (!strict) {
-            return String(x)
-        }
-        throw new ValidationError(this, x)
-    }
-
-    static SINGLETON = new NativeString()
-}
-
 /** Generic string */
 export function STR() {
-    return new SmartString(NativeString.SINGLETON)
+    return SmartString.SINGLETON
 }
 
 
