@@ -27,7 +27,7 @@ class SmartLiteral<T extends Primative> extends SmartType<T, T> {
     }
 }
 
-/** One of a specific set of literal primative values. */
+/** One of a given specific set of literal, primative values. */
 export function LITERAL<T extends Primative>(...values: readonly T[]) {
     return new SmartLiteral(values)
 }

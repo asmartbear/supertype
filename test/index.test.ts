@@ -1,6 +1,6 @@
 import * as V from "../src/index"
 import * as T from "./testutil"
-import { IMarshallJson, JSONType } from "../src/common"
+import { IMarshallJson, isPrimative, JSONType } from "../src/common"
 import { JS_UNDEFINED_SIGNAL } from "../src/undef";
 
 /** These values pass validation and are identical in their final form. */
@@ -30,6 +30,22 @@ function toFromJSON<U, J extends JSONType>(m: IMarshallJson<U, J>, from: U, to: 
     T.eq(js, to)
     T.eq(m.fromJSON(to), from)
 }
+
+test('isPrimative', () => {
+    T.eq(isPrimative(undefined), false)
+    T.eq(isPrimative(null), true)
+    T.eq(isPrimative(0), true)
+    T.eq(isPrimative(123), true)
+    T.eq(isPrimative(""), true)
+    T.eq(isPrimative("foo"), true)
+    T.eq(isPrimative(true), true)
+    T.eq(isPrimative(false), true)
+    T.eq(isPrimative([]), false)
+    T.eq(isPrimative([1]), false)
+    T.eq(isPrimative({}), false)
+    T.eq(isPrimative({ a: 1 }), false)
+    T.eq(isPrimative(new Date()), false)
+})
 
 test('smart undefined', () => {
     let ty = V.UNDEF()

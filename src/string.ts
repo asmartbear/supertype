@@ -60,10 +60,28 @@ class SmartString extends SmartType<string, string> {
     }
 }
 
-/** Generic string */
+/** General string */
 export function STR() {
     return new SmartString()
 }
 
+/** Non-empty string shortcut */
+export function NONEMPTYSTR() {
+    return STR().minLen(1)
+}
 
+/** String that validates as a Javascript identifier */
+export function JSID() {
+    return STR().match(/^[a-zA-Z_]\w*$/)
+}
+
+/** String that validates as an HTML/XHTML identifier */
+export function WEBID() {
+    return STR().match(/^[a-zA-Z][\w-]*$/)
+}
+
+/** String that validates as a URL */
+export function URL() {
+    return STR().match(/^https?:\/\/./)
+}
 
