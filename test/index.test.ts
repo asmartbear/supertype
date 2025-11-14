@@ -30,6 +30,36 @@ function toFromJSON<U, J extends JSONType>(m: IMarshallJson<U, J>, from: U, to: 
     T.eq(m.fromJSON(to), from)
 }
 
+test('smart boolean', () => {
+    let ty = V.BOOL()
+    T.eq(ty.description, "boolean")
+
+    // strict
+    passes(true, ty, false, true)
+    fails(true, ty, undefined, null, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, "", "a", "foo bar", "0", "123", "12bar", [], [1], [2, 1], [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 })
+    T.be(ty.input(true), true, "default parameter")
+
+    // not strict
+    T.be(ty.input(undefined, false), false)
+    T.be(ty.input(null, false), false)
+    T.be(ty.input(0, false), false)
+    T.be(ty.input(1, false), true)
+    T.be(ty.input(-1, false), true)
+    T.be(ty.input(Number.EPSILON, false), true)
+    T.be(ty.input(Number.NEGATIVE_INFINITY, false), true)
+    T.be(ty.input(Number.NaN, false), false, "the native way in javascript too")
+    T.be(ty.input("", false), false)
+    T.be(ty.input("0", false), true)
+    T.be(ty.input("123", false), true)
+    T.be(ty.input([], false), false)
+    T.be(ty.input([1], false), true)
+    T.be(ty.input({}, false), false)
+    T.be(ty.input({ a: 1 }, false), true)
+
+    toFromJSON(ty, false, false)
+    toFromJSON(ty, true, true)
+})
+
 test('smart number', () => {
     let ty = V.NUM()
     T.eq(ty.description, "number")
@@ -227,3 +257,4 @@ test('smart tuple of 2', () => {
     T.throws(() => ty.fromJSON({} as any))
     T.throws(() => ty.fromJSON(true as any))
 })
+
