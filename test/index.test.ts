@@ -100,8 +100,8 @@ test('number to JSON', () => {
     let ty = V.NUM()
     toFromJSON(ty, 123, 123)
     toFromJSON(ty, -12.34, -12.34)
-    toFromJSON(ty, Number.POSITIVE_INFINITY, "Infinity")
-    toFromJSON(ty, Number.NEGATIVE_INFINITY, "-Infinity")
+    toFromJSON(ty, Number.POSITIVE_INFINITY, "Inf")
+    toFromJSON(ty, Number.NEGATIVE_INFINITY, "-Inf")
     toFromJSON(ty, Number.NaN, "NaN")
     // Bad JSON
     T.throws(() => ty.fromJSON("foo"))
@@ -281,4 +281,35 @@ test('smart object with defaults', () => {
     T.eq(ty.input({ x: undefined, s: undefined, b: undefined }), { x: 123, s: "hi", b: false }, "explicit undefined instead of missing")
 
     T.eq(ty.toHash(ty.input({})), "a56e71350dcdb6cb8481f283e14d52ee", "the exact value doesn't matter")
+})
+
+test('transform', () => {
+    const cssType = V.OBJ({
+        left: V.NUM(),
+        top: V.NUM(),
+        right: V.NUM(),
+        bottom: V.NUM(),
+    })
+    const ty = V.STR().minLen(4).transform("css quad", cssType, (s: string) => {
+        const m = s.match(/^\s*([\d\.-]+)\s+([\d\.-]+)\s+([\d\.-]+)\s+([\d\.-]+)/)
+        if (!m) throw new V.ValidationError(cssType, s, "Didn't match regex")
+        return {
+            top: parseFloat(m[1]),
+            right: parseFloat(m[2]),
+            bottom: parseFloat(m[3]),
+            left: parseFloat(m[4]),
+        }
+    })
+    T.eq(ty.description, "string>>minLen=4>>css quad>>{left:number,top:number,right:number,bottom:number}")
+
+    T.eq(ty.input("1 2 3 4"), { left: 4, top: 1, right: 2, bottom: 3 })
+    T.eq(ty.input("12 2.6 -3 4"), { left: 4, top: 12, right: 2.6, bottom: -3 })
+    T.eq(ty.input("12 2.6 -3 4 !important"), { left: 4, top: 12, right: 2.6, bottom: -3 })
+
+    T.throws(() => ty.input(undefined))
+    T.throws(() => ty.input(""))
+    T.throws(() => ty.input("this is long enough but does not match"))
+    T.throws(() => ty.input("1 2 3 nope 4"))
+
+    toFromJSON(ty, { left: 4, top: 12, right: 2.6, bottom: -3 }, { left: 4, top: 12, right: 2.6, bottom: -3 })
 })

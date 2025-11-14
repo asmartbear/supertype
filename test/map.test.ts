@@ -18,6 +18,7 @@ test("map from map", () => {
     toFromJSON(ty, new Map([]), [])
     toFromJSON(ty, new Map([[1, "a"]]), [[1, "a"]])
     toFromJSON(ty, new Map([[1, "a"], [2, "b"]]), [[1, "a"], [2, "b"]])
+    toFromJSON(ty, new Map([[Number.POSITIVE_INFINITY, "a"], [Number.NaN, "b"]]), [["Inf", "a"], ["NaN", "b"]])
 
     T.throws(() => ty.fromJSON({}))
     T.throws(() => ty.fromJSON(false))

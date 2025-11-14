@@ -1,7 +1,7 @@
-import { ValidationError, SmartType, transformer } from "./common"
+import { ValidationError, SmartType, transformer, JSONType } from "./common"
 
 /** The native `number` type */
-class SmartNumber extends SmartType<number, number | string> {
+class SmartNumber extends SmartType<number, number | "Inf" | "-Inf" | "NaN"> {
 
     constructor() {
         super("number")
@@ -23,16 +23,17 @@ class SmartNumber extends SmartType<number, number | string> {
         throw new ValidationError(this, x)
     }
 
-    toJSON(x: number) {
+    toJSON(x: number): number | "Inf" | "-Inf" | "NaN" {
         if (Number.isNaN(x)) return "NaN"
-        if (x === Number.POSITIVE_INFINITY || x === Number.NEGATIVE_INFINITY) return String(x)
+        if (x === Number.POSITIVE_INFINITY) return "Inf"
+        if (x === Number.NEGATIVE_INFINITY) return "-Inf"
         return x
     }
 
-    fromJSON(x: number | string): number {
+    fromJSON(x: JSONType): number {
         switch (x) {
-            case 'Infinity': return Number.POSITIVE_INFINITY
-            case '-Infinity': return Number.NEGATIVE_INFINITY
+            case 'Inf': return Number.POSITIVE_INFINITY
+            case '-Inf': return Number.NEGATIVE_INFINITY
             case 'NaN': return Number.NaN
         }
         if (typeof x !== "number") throw new ValidationError(this, x, "Expected number")

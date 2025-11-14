@@ -136,11 +136,32 @@ export abstract class SmartType<T = any, J extends JSONType = JSONType> implemen
         return simplifiedToHash(this.toSimplified(x))
     }
 
+    /**
+     * Transforms something of this type into another type, including validation and arbitrary additional logic.
+     * 
+     * @param description human-readable description to add to the overall type definition
+     * @param resultType the type definition of the result of the transformation
+     * @param fTransform the function that transforms a validated value of the current type into the value needed by `resultType`.
+     */
+    transform<R, RESULT extends SmartType<R>>(description: string, resultType: RESULT, fTransform: (x: T) => R): typeof resultType {
+        const upstream = this     // make local copy of this value
+        const newDescription = this.description + '>>' + description + '>>' + resultType.description
+        const ResultClass = resultType.constructor as ConcreteConstructor<ClassOf<typeof resultType>>;
+        const cls = class extends ResultClass {
+            public readonly description = newDescription
+            // Wrap input in the transformation
+            input(x: unknown, strict: boolean = true) {
+                return fTransform(upstream.input(x, strict))
+            }
+        }
+        return new cls(...resultType.constructorArgs) as any
+    }
+
     get constructorArgs(): any[] { return [this.description] }
 
     abstract input(x: unknown, strict?: boolean): T;
     abstract toJSON(x: T): J;
-    abstract fromJSON(js: J): T;
+    abstract fromJSON(js: JSONType): T;
 }
 
 /**
