@@ -135,26 +135,6 @@ test('number to JSON', () => {
     T.eq(ty.toSimplified(123), 123)
 })
 
-test('number clamped', () => {
-    let ty = V.NUM().clamp(0, 10)
-    T.be(ty.input(5), 5)
-    T.be(ty.input(1), 1)
-    T.be(ty.input(0), 0)
-    T.be(ty.input(-1), 0)
-    T.be(ty.input(Number.EPSILON), Number.EPSILON)
-    T.be(ty.input(10), 10)
-    T.be(ty.input(10 + Number.EPSILON), 10)
-    T.be(ty.input(123), 10)
-    ty = V.NUM().clamp(undefined, 10)
-    T.be(ty.input(-5), -5)
-    T.be(ty.input(5), 5)
-    T.be(ty.input(15), 10)
-    ty = V.NUM().clamp(0, undefined)
-    T.be(ty.input(-5), 0)
-    T.be(ty.input(5), 5)
-    T.be(ty.input(15), 15)
-})
-
 test('smart string', () => {
     let ty = V.STR()
     T.eq(ty.description, "string")

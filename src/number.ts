@@ -35,7 +35,7 @@ class SmartNumber extends SmartType<number, number | string> {
             case '-Infinity': return Number.NEGATIVE_INFINITY
             case 'NaN': return Number.NaN
         }
-        if (typeof x !== "number") throw new ValidationError(this, x, "expected number")
+        if (typeof x !== "number") throw new ValidationError(this, x, "Expected number")
         return x
     }
 
@@ -43,7 +43,7 @@ class SmartNumber extends SmartType<number, number | string> {
     min(min: number) {
         return transformer<number, this>(this,
             `min=${min}`,
-            (x) => { if (x < min || Number.isNaN(x)) throw new ValidationError(this, x); return x }
+            (x) => { if (x < min || Number.isNaN(x)) throw new ValidationError(this, x, "Beyond minimum"); return x }
         )
     }
 
@@ -51,7 +51,7 @@ class SmartNumber extends SmartType<number, number | string> {
     max(max: number) {
         return transformer<number, this>(this,
             `max=${max}`,
-            (x) => { if (x > max || Number.isNaN(x)) throw new ValidationError(this, x); return x }
+            (x) => { if (x > max || Number.isNaN(x)) throw new ValidationError(this, x, "Beyond maximum"); return x }
         )
     }
 
@@ -64,6 +64,14 @@ class SmartNumber extends SmartType<number, number | string> {
                 if (max !== undefined && x > max) x = max
                 return x
             }
+        )
+    }
+
+    /** Enforce the number is a (safe) integer value. */
+    int() {
+        return transformer<number, this>(this,
+            `int`,
+            (x) => { if (!Number.isSafeInteger(x)) throw new ValidationError(this, x, "Not an integer"); return x }
         )
     }
 }
