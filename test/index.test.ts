@@ -272,6 +272,7 @@ test('smart tuple x3', () => {
 
     // JSON
     toFromJSON(ty, [123, "123", false], [123, "123", false])
+    // const xx=ty.toJSON({})
     T.throws(() => ty.fromJSON([123, 123] as any))
     T.throws(() => ty.fromJSON(["123", "123"] as any))
     T.throws(() => ty.fromJSON({} as any))

@@ -169,11 +169,6 @@ export type NativeFor<ST> =
     : ST extends { readonly [K: string]: SmartType } ? { [K in keyof ST]: NativeFor<ST[K]>; }
     : never;
 
-/** From a tuple of SmartType, gives a tuple of the native types */
-export type NativeTupleFor<ST extends readonly SmartType[]> = {
-    [K in keyof ST]: NativeFor<ST[K]>;
-};
-
 /**
  * Extracts the JSON out of a SmartType, or the union of JSON types if an array or other amalgamation.
  */
@@ -185,6 +180,11 @@ export type JsonFor<ST> =
 
 
 /** From a tuple of SmartType, gives a tuple of the native types */
+export type NativeTupleFor<ST extends readonly SmartType[]> = {
+    [K in keyof ST]: NativeFor<ST[K]>;
+};
+
+/** From a tuple of SmartType, gives a tuple of the JSON types */
 export type JsonTupleFor<ST extends readonly SmartType[]> = {
     [K in keyof ST]: JsonFor<ST[K]>;
 };
