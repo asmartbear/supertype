@@ -238,7 +238,7 @@ test('smart or', () => {
     T.throws(() => ty.toJSON(true as any))
 })
 
-test('smart tuple of 2', () => {
+test('smart tuple x2', () => {
     let ty = V.TUPLE(V.NUM(), V.STR())
     T.eq(ty.description, "[number,string]")
 
@@ -258,7 +258,7 @@ test('smart tuple of 2', () => {
     T.throws(() => ty.fromJSON(true as any))
 })
 
-test('smart tuple of 3', () => {
+test('smart tuple x3', () => {
     let ty = V.TUPLE(V.NUM(), V.STR(), V.BOOL())
     T.eq(ty.description, "[number,string,boolean]")
 
@@ -276,5 +276,26 @@ test('smart tuple of 3', () => {
     T.throws(() => ty.fromJSON(["123", "123"] as any))
     T.throws(() => ty.fromJSON({} as any))
     T.throws(() => ty.fromJSON(true as any))
+})
+
+test('smart object', () => {
+    let ty = V.OBJ({
+        x: V.NUM(),
+        s: V.STR(),
+        b: V.BOOL()
+    })
+    T.eq(ty.description, "{x:number,s:string,b:boolean}")
+
+    // strict
+    passes(true, ty, { x: 0, s: "", b: false }, { x: 123, s: "cool", b: true })
+    fails(true, ty, undefined, null, false, true, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, "", "a", "foo bar", "0", "123", "12bar", [], [1], [2, 1], [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 }, [321, "123", 0], ["123", 123], [321, "123", 0], ["123", 123, true], [321, "123", true, true], { x: "foo", s: "bar", b: false })
+    T.eq(ty.input({ x: 123, s: "cool", b: true }), { x: 123, s: "cool", b: true })
+
+    // not strict
+    T.eq(ty.input({ x: "123", s: "123", b: "123" }, false), { x: 123, s: "123", b: true })
+    T.eq(ty.input({ x: 123, s: 123, b: 123 }, false), { x: 123, s: "123", b: true })
+
+    // JSON
+    toFromJSON(ty, { x: 123, s: "cool", b: true }, { x: 123, s: "cool", b: true })
 })
 

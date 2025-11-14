@@ -155,3 +155,8 @@ export type NativeFor<ST> =
 export type NativeTupleFor<T extends readonly SmartType<any, any>[]> = {
     [K in keyof T]: T[K] extends SmartType<infer U, any> ? U : never;
 };
+
+/** From an object with SmartType values, gives an object with the same fields but native values. */
+export type NativeObjectFor<T extends { readonly [K: string]: SmartType<any> }> = {
+    [K in keyof T]: T[K] extends SmartType<infer U, any> ? U : never;
+};
