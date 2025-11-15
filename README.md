@@ -1,4 +1,4 @@
-# Super Types
+# Smart Types
 
 Data types that parse, validate, transform, marshal, compare, and hash.
 
@@ -21,7 +21,7 @@ Data types that parse, validate, transform, marshal, compare, and hash.
 ## Usage
 
 ```typescript
-import * as V from "@asmartbear/supertype"
+import * as V from "@asmartbear/smarttype"
 
 const myType = V.OBJ({
     id: V.STR().re(/^[a-zA-Z]\w+$/),
