@@ -1,5 +1,5 @@
 import { ValidationError, SmartType, JSONType, NativeFor, JsonFor, NativeTupleFor } from "./common"
-import { UNDEF } from "./undef"
+import { JS_UNDEFINED_SIGNAL } from "./undef"
 
 type AlternationJSON = {
     t: string,
@@ -57,7 +57,7 @@ export function OR<ST extends readonly SmartType[]>(...types: ST) {
     return new SmartAlternation<NativeFor<ST>>(types)
 }
 
-class SmartOptional<T, J extends JSONType> extends SmartType<T | undefined, J> {
+class SmartOptional<T, J extends JSONType> extends SmartType<T | undefined, J | typeof JS_UNDEFINED_SIGNAL> {
 
     constructor(
         public readonly typ: SmartType<T, J>,
@@ -77,13 +77,13 @@ class SmartOptional<T, J extends JSONType> extends SmartType<T | undefined, J> {
         return this.typ.input(x, strict)
     }
 
-    toJSON(x: T): J {
-        if (x === undefined) return undefined as any      // I know!
+    toJSON(x: T): J | typeof JS_UNDEFINED_SIGNAL {
+        if (x === undefined) return JS_UNDEFINED_SIGNAL
         return this.typ.toJSON(x)
     }
 
-    fromJSON(js: J): T | undefined {
-        if (js === undefined) return undefined
+    fromJSON(js: J | typeof JS_UNDEFINED_SIGNAL): T | undefined {
+        if (js === undefined || js === JS_UNDEFINED_SIGNAL) return undefined
         return this.typ.fromJSON(js)
     }
 }
@@ -92,6 +92,6 @@ class SmartOptional<T, J extends JSONType> extends SmartType<T | undefined, J> {
  * Returns the same type, but where `undefined` is also an acceptable value.
  * If `undefined` is already one of the types it can be, returns the original object unchanged.
  */
-export function OPT<T, J extends JSONType>(typ: SmartType<T, J>): SmartType<T | undefined, J> {
+export function OPT<T, J extends JSONType>(typ: SmartType<T, J>): SmartType<T | undefined, J | typeof JS_UNDEFINED_SIGNAL> {
     return typ.canBeUndefined ? typ : new SmartOptional(typ)
 }

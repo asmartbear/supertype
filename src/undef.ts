@@ -24,9 +24,11 @@ class SmartUndefined extends SmartType<undefined, typeof JS_UNDEFINED_SIGNAL> {
         if (x === JS_UNDEFINED_SIGNAL) return undefined
         throw new ValidationError(this, x)
     }
+
+    static SINGLETON = new SmartUndefined()
 }
 
 /** The `undefined` value */
 export function UNDEF() {
-    return new SmartUndefined()
+    return SmartUndefined.SINGLETON
 }

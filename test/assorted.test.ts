@@ -1,6 +1,7 @@
 import * as T from "./testutil"
 import * as V from "../src/index"
 import { passes, fails, toFromJSON } from "./moreutil"
+import { JS_UNDEFINED_SIGNAL } from "../src/undef"
 
 
 test('smart literal primative', () => {
@@ -15,6 +16,26 @@ test('smart literal primative', () => {
     // JSON
     toFromJSON(ty, "none", "none")
     toFromJSON(ty, "both", "both")
+})
+
+test('smart optional without being embedded in an object', () => {
+    let ty = V.OPT(V.NUM())
+    T.eq(ty.description, "number?")
+
+    // strict
+    passes(true, ty, undefined, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN)
+    fails(true, ty, null, false, true, "", "a", "foo bar", "0", "123", "12bar", [], [1], [2, 1], [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 })
+
+    // not strict
+    T.eq(ty.input(123), 123)
+    T.eq(ty.input(123, false), 123)
+    T.eq(ty.input("123", false), 123)
+    T.eq(ty.input(undefined), undefined)
+    T.eq(ty.input(undefined, false), undefined)
+
+    // JSON
+    toFromJSON(ty, 123, 123)
+    toFromJSON(ty, undefined, JS_UNDEFINED_SIGNAL)
 })
 
 test('smart or with primatives', () => {

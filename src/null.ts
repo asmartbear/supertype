@@ -1,7 +1,5 @@
 import { ValidationError, SmartType } from "./common"
 
-export const JS_UNDEFINED_SIGNAL = "__undefined__"
-
 class SmartNull extends SmartType<null, null> {
 
     constructor() {
