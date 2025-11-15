@@ -3,7 +3,6 @@ import * as V from "../src/index"
 import { passes, fails, toFromJSON } from "./moreutil"
 import { JS_UNDEFINED_SIGNAL } from "../src/undef"
 
-
 test('smart literal primative', () => {
     let ty = V.LITERAL("none", "left", "right", "both")
     T.eq(ty.description, "(both|left|none|right)")
@@ -83,3 +82,19 @@ test('smart date', () => {
     toFromJSON(ty, new Date(1234567890), 1234567890)
 })
 
+class MyObjA { }
+class MyObjB extends MyObjA { }
+
+test('smart class', () => {
+    const a = new MyObjA()
+    const b = new MyObjB()
+    let ty = V.CLASS(MyObjA)
+    T.eq(ty.description, "MyObjA")
+
+    // validate
+    passes(true, ty, a, b)
+    fails(true, ty, undefined, null, false, true, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, "", "a", "foo bar", "0", "123", "12bar", [], [1], [2, 1], [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 }, [321, "123", 0], ["123", 123], [321, "123", 0], ["123", 123, true], [321, "123", true, true], { x: "foo", s: "bar", b: false }, new Date(123456789))
+
+    T.throws(() => ty.toJSON(a))
+    T.throws(() => ty.fromJSON(null))
+})

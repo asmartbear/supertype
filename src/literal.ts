@@ -8,6 +8,9 @@ class SmartLiteral<T extends Primative> extends SmartType<T, T> {
         super('(' + values.map(String).sort().join('|') + ')')
     }
 
+    // istanbul ignore next
+    get constructorArgs() { return [this.values] }
+
     input(x: unknown, strict: boolean = true) {
         if (isPrimative(x)) {
             const i = this.values.indexOf(x as any)
