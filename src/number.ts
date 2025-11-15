@@ -24,10 +24,13 @@ class SmartNumber extends SmartType<number, number | "Inf" | "-Inf" | "NaN"> {
     }
 
     toJSON(x: number): number | "Inf" | "-Inf" | "NaN" {
-        if (Number.isNaN(x)) return "NaN"
-        if (x === Number.POSITIVE_INFINITY) return "Inf"
-        if (x === Number.NEGATIVE_INFINITY) return "-Inf"
-        return x
+        if (typeof x === "number") {
+            if (Number.isNaN(x)) return "NaN"
+            if (x === Number.POSITIVE_INFINITY) return "Inf"
+            if (x === Number.NEGATIVE_INFINITY) return "-Inf"
+            return x
+        }
+        throw new ValidationError(this, x)
     }
 
     fromJSON(x: JSONType): number {

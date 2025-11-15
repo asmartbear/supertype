@@ -14,11 +14,13 @@ class SmartNull extends SmartType<null, null> {
     }
 
     toJSON(x: any): null {
-        return null
+        if (x === null) return x
+        throw new ValidationError(this, x)
     }
 
     fromJSON(x: any) {
-        return null
+        if (x === null) return x
+        throw new ValidationError(this, x)
     }
 }
 

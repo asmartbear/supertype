@@ -1,15 +1,15 @@
-import { ValidationError, SmartType, JSONType, NativeFor, JsonFor } from "./common"
+import { ValidationError, SmartType, JSONType, NativeFor, JsonFor, NativeTupleFor } from "./common"
 import { UNDEF } from "./undef"
 
-type AlternationJSON<J extends JSONType> = {
+type AlternationJSON = {
     t: string,
-    x: J,
+    x: JSONType,
 }
 
-class SmartAlternation<ST extends SmartType<any>[]> extends SmartType<NativeFor<ST>, AlternationJSON<JsonFor<ST>>> {
+class SmartAlternation<T> extends SmartType<T, AlternationJSON> {
 
     constructor(
-        public readonly types: ST,
+        public readonly types: readonly SmartType<T>[],
     ) {
         super('(' + types.map(t => t.description).join('|') + ')')
     }
@@ -21,7 +21,7 @@ class SmartAlternation<ST extends SmartType<any>[]> extends SmartType<NativeFor<
         return !!this.types.find(t => t.canBeUndefined)         // yes if any of the types is undefined
     }
 
-    input(x: unknown, strict: boolean = true): NativeFor<ST> {
+    input(x: unknown, strict: boolean = true): T {
         for (const t of this.types) {
             const y = t.inputReturnError(x, strict)
             if (y instanceof ValidationError) continue
@@ -30,17 +30,18 @@ class SmartAlternation<ST extends SmartType<any>[]> extends SmartType<NativeFor<
         throw new ValidationError(this, x)
     }
 
-    toJSON(x: NativeFor<ST>): AlternationJSON<JsonFor<ST>> {
+    toJSON(x: T): AlternationJSON {
         // Find the type that strictly accepts this value, then encode it in JSON
         for (const t of this.types) {
-            const y = t.inputReturnError(x, true)
-            if (y instanceof ValidationError) continue
-            return { t: t.description, x: t.toJSON(x) as any }
+            try {
+                const y = t.toJSON(x)
+                return { t: t.description, x: y }
+            } catch { }
         }
         throw new ValidationError(this, x, "expected validated type for JSON")
     }
 
-    fromJSON(js: AlternationJSON<JsonFor<ST>>): NativeFor<ST> {
+    fromJSON(js: AlternationJSON): T {
         // Pick off the type and value, then unwrap recursively
         for (const t of this.types) {
             if (t.description === js.t) {
@@ -51,9 +52,9 @@ class SmartAlternation<ST extends SmartType<any>[]> extends SmartType<NativeFor<
     }
 }
 
-/** Any of these types are acceptable. */
-export function OR<ST extends SmartType<any>[]>(...types: ST) {
-    return new SmartAlternation(types)
+/** Any of these types are acceptable.  Typescript is a union; JSON is a special structure that specifies which type it is. */
+export function OR<ST extends readonly SmartType[]>(...types: ST) {
+    return new SmartAlternation<NativeFor<ST>>(types)
 }
 
 class SmartOptional<T, J extends JSONType> extends SmartType<T | undefined, J> {

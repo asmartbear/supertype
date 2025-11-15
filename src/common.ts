@@ -211,7 +211,9 @@ type NativeUndefinable<T> = T extends undefined ? undefined : never;
  * Extracts the native type out of a SmartType, or the union of native types if an array or other amalgamation.
  */
 export type NativeFor<ST> =
-    ST extends SmartType<infer T, any> ? T
+    ST extends SmartType<undefined, any> ? undefined
+    : ST extends SmartType<null, any> ? null
+    : ST extends SmartType<infer T, any> ? T
     : ST extends SmartType[] ? NativeFor<ValuesOf<ST>>
     : ST extends { readonly [K: string]: SmartType } ? (
         {
@@ -235,7 +237,6 @@ export type JsonFor<ST> =
             [K in keyof ST as undefined extends NativeFor<ST[K]> ? never : K]: JsonFor<ST[K]>
         }
     )
-
     : never;
 
 

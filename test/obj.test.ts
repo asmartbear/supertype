@@ -1,17 +1,12 @@
 import * as T from "./testutil"
+import * as V from "../src/index"
 import { passes, fails, toFromJSON } from "./moreutil"
-import { OBJ } from "../src/fields"
-import { NUM } from "../src/number"
-import { BOOL } from "../src/boolean"
-import { STR } from "../src/string"
-import { OPT } from "../src/alternation"
-import { UndefinedFieldsAreOptional } from "../src/common"
 
 test('smart fields', () => {
-    let ty = OBJ({
-        x: NUM(),
-        s: STR(),
-        b: BOOL(),
+    let ty = V.OBJ({
+        x: V.NUM(),
+        s: V.STR(),
+        b: V.BOOL(),
     })
     T.eq(ty.description, "{x:number,s:string,b:boolean}")
 
@@ -29,10 +24,10 @@ test('smart fields', () => {
 })
 
 test('smart fields with defaults', () => {
-    let ty = OBJ({
-        x: NUM().def(123),
-        s: STR().def("hi").replace(/hi/g, "there"),
-        b: BOOL().def(false),
+    let ty = V.OBJ({
+        x: V.NUM().def(123),
+        s: V.STR().def("hi").replace(/hi/g, "there"),
+        b: V.BOOL().def(false),
     })
     T.eq(ty.description, "{x:number=123,s:string=hi>>re=/hi/g->there,b:boolean=false}")
 
@@ -46,10 +41,10 @@ test('smart fields with defaults', () => {
 })
 
 test('smart fields with optional fields', () => {
-    let ty = OBJ({
-        x: OPT(NUM()),
-        s: OPT(OPT(STR())),     // the second one is ignored
-        b: BOOL(),
+    let ty = V.OBJ({
+        x: V.OPT(V.NUM()),
+        s: V.OPT(V.OPT(V.STR())),     // the second one is ignored
+        b: V.BOOL(),
     })
     T.eq(ty.description, "{x:number?,s:string?,b:boolean}")
 
@@ -59,4 +54,21 @@ test('smart fields with optional fields', () => {
     T.eq(ty.input({ s: "hello", b: true }), { s: "hello", b: true })
     toFromJSON(ty, { b: true }, { b: true })
     toFromJSON(ty, { s: "hi", b: true }, { s: "hi", b: true })
+})
+
+test('smart fields with null objects', () => {
+    let ty = V.OBJ({
+        dn: V.OR(V.DATE(), V.NIL()),
+        du: V.OPT(V.DATE()),
+    })
+    T.eq(ty.description, "{dn:(date|null),du:date?}")
+
+    T.eq(ty.input({ dn: new Date(1234), du: new Date(6789) }), { dn: new Date(1234), du: new Date(6789) })
+    T.eq(ty.input({ dn: null, du: new Date(6789) }), { dn: null, du: new Date(6789) })
+    T.eq(ty.input({ dn: null }), { dn: null })
+    T.throws(() => ty.input({}))
+    T.throws(() => ty.input({ du: null }))
+
+    toFromJSON(ty, { dn: new Date(1234), du: new Date(6789) }, { dn: { t: "date", x: 1234 }, du: 6789 })
+    toFromJSON(ty, { dn: new Date(1234) }, { dn: { t: "date", x: 1234 } })
 })

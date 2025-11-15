@@ -1,4 +1,4 @@
-export { ValidationError, SmartType } from "./common"
+export { ValidationError, SmartType, NativeFor, JsonFor } from "./common"
 export { UNDEF } from "./undef"
 export { NIL } from "./null"
 export { BOOL } from "./boolean"

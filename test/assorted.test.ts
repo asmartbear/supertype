@@ -17,7 +17,7 @@ test('smart literal primative', () => {
     toFromJSON(ty, "both", "both")
 })
 
-test('smart or', () => {
+test('smart or with primatives', () => {
     let ty = V.OR(V.NUM(), V.STR())
     T.eq(ty.description, "(number|string)")
 

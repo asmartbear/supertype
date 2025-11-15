@@ -21,11 +21,13 @@ class SmartBoolean extends SmartType<boolean, boolean> {
     }
 
     toJSON(x: boolean) {
-        return x
+        if (typeof x === "boolean") return x
+        throw new ValidationError(this, x)
     }
 
     fromJSON(x: boolean) {
-        return x
+        if (typeof x === "boolean") return x
+        throw new ValidationError(this, x)
     }
 }
 

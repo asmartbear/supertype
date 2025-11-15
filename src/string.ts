@@ -15,11 +15,13 @@ class SmartString extends SmartType<string, string> {
     }
 
     toJSON(x: string): string {
-        return x
+        if (typeof x === "string") return x
+        throw new ValidationError(this, x)
     }
 
     fromJSON(x: string): string {
-        return this.input(x, true)
+        if (typeof x === "string") return x
+        throw new ValidationError(this, x)
     }
 
     /** Validate that the string is at least this many characters. */
