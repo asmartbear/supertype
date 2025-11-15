@@ -1,4 +1,4 @@
-import { Simple, ISimplifiable, simplifiedToDisplay, simplifiedToHash, simplifyOpaqueType, SimplifiedWalker } from "@asmartbear/simplified";
+import { Simple, ISimplifiable, simplifiedToDisplay, simplifiedToHash, simplifyOpaqueType, SimplifiedWalker, getClassOf } from "@asmartbear/simplified";
 
 export type Primative = boolean | number | string | null
 export type JSONType = null | boolean | string | number | JSONType[] | { [K: string]: JSONType } | { [K: number]: JSONType }
@@ -134,6 +134,26 @@ export abstract class SmartTypeVisitor<T> {
     visitFields(x: [T, T][]): T { return this.visitMap(x) }
 }
 
+/** Visitor that converts like `simplify()` except we don't look into opaque objects and stuff like that. */
+class SmartTypeToSimplifiedVisitor extends SmartTypeVisitor<Simple> {
+    // istanbul ignore next
+    visitUndefined(x: undefined) { return x }
+    visitNull(x: null) { return x }
+    visitBoolean(x: boolean) { return x }
+    visitNumber(x: number) { return x }
+    visitString(x: string) { return x }
+    visitArray(x: Simple[]) { return x }
+    visitDate(x: Date) { return `Date(${x.getTime()})` }
+    visitFields(x: [Simple, Simple][]) { return Object.fromEntries(x) }
+
+    visitOpaqueObject(x: object) {
+        // istanbul ignore next
+        return (getClassOf(x)?.name ?? "Object") + "()"
+    }
+
+    static INSTANCE = new SmartTypeToSimplifiedVisitor()
+}
+
 /** Symbol used for the configured default value for the type, if any. */
 export const __DEFAULT_VALUE = Symbol('__DEFAULT_VALUE')
 
@@ -177,7 +197,7 @@ export abstract class SmartType<T = any, J extends JSONType = JSONType> implemen
      */
     toSimplified(x?: T): Simple {
         if (x === undefined) return this.description
-        return simplifyOpaqueType(x)        // don't need a type system for this per se, but could potentially tweak this based on configuration
+        return this.visit(SmartTypeToSimplifiedVisitor.INSTANCE, x)
     }
 
     /** Gets a hash value for the object, normalized for things like field-ordering and ignoring undefined fields */

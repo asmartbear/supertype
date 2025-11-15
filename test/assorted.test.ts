@@ -121,6 +121,7 @@ test('smart class', () => {
     T.eq(ty.keys, undefined)
     T.eq(ty.visit(TestVisitor.SINGLETON, a), "MyObjA()")
     T.eq(ty.visit(TestVisitor.SINGLETON, b), "MyObjB()")
+    T.eq(ty.toSimplified(b), "MyObjB()")
 
     // validate
     passes(true, ty, a, b)

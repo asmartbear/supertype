@@ -42,7 +42,7 @@ test('smart fields with defaults', () => {
     T.eq(ty.input({ b: true, s: "there" }), { x: 123, s: "there", b: true })
     T.eq(ty.input({ x: undefined, s: undefined, b: undefined }), { x: 123, s: "hi", b: false }, "explicit undefined instead of missing")
 
-    T.eq(ty.toHash(ty.input({})), "a56e71350dcdb6cb8481f283e14d52ee", "the exact value doesn't matter")
+    T.eq(ty.toHash(ty.input({})), "6699494d73460ec8215aa9a29e152c71", "the exact value doesn't matter")
 })
 
 test('smart fields with optional fields', () => {
@@ -72,6 +72,8 @@ test('smart fields with null objects', () => {
     T.eq(ty.description, "{dn:(date|null),du:date?}")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, new Set(["dn", "du"]))
+    T.eq(ty.toSimplified({ dn: new Date(1234), du: new Date(6789) }), { "dn": "Date(1234)", "du": "Date(6789)" })
+    T.eq(ty.toSimplified({ dn: null }), { "dn": null, })
 
     T.eq(ty.input({ dn: new Date(1234), du: new Date(6789) }), { dn: new Date(1234), du: new Date(6789) })
     T.eq(ty.input({ dn: null, du: new Date(6789) }), { dn: null, du: new Date(6789) })
@@ -92,10 +94,12 @@ test('smart fields made partial', () => {
     T.eq(ty.description, "{x:number,s:string?,b:boolean}")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, new Set(["x", "s", "b"]))
+    T.eq(ty.toSimplified({ x: 1, b: true }), { x: 1, b: true })
 
     let opt = ty.partial()
     T.eq(opt.description, "{x:number?,s:string?,b:boolean?}")
     T.eq(opt.canBeUndefined, false, "the fields inside can be undefined, but the outer object is not")
+    T.eq(opt.toSimplified({ b: true }), { b: true })
 
     T.eq(opt.input({ b: true }), { b: true })
     T.eq(opt.input({}), {})

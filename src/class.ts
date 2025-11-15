@@ -18,10 +18,6 @@ class SmartClass<T extends object> extends SmartType<T, null> {
     // istanbul ignore next
     get constructorArgs() { return [this.cls] }
 
-    toSimplified(x: T) {
-        return `[${getClassOf<any>(x)?.name ?? this.cls.name}]`
-    }
-
     visit<U>(visitor: SmartTypeVisitor<U>, x: T): U {
         return visitor.visitOpaqueObject(x)
     }
