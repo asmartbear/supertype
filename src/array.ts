@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, JsonFor, JSONType } from "./common"
+import { ValidationError, SmartType, JSONType, isIterable } from "./common"
 
 class SmartArray<T, J extends JSONType, EL extends SmartType<T, J>> extends SmartType<T[], J[]> {
 
@@ -12,8 +12,17 @@ class SmartArray<T, J extends JSONType, EL extends SmartType<T, J>> extends Smar
     get constructorArgs() { return [this.elementType] }
 
     input(x: unknown, strict: boolean): T[] {
-        if (!Array.isArray(x)) throw new ValidationError(this, x, "Expected array")
-        return x.map(el => this.elementType.input(el, strict))
+        if (!isIterable(x)) throw new ValidationError(this, x)
+        const result: T[] = []
+        for (const y of x) {
+            const z = this.elementType.inputReturnError(y, strict)
+            if (z instanceof ValidationError) {
+                z.addPath(result.length)
+                throw z
+            }
+            result.push(z)
+        }
+        return result
     }
 
     toJSON(x: T[]) {

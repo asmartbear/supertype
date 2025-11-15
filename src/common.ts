@@ -22,6 +22,11 @@ export type InstanceOf<C> = C extends new (...args: any[]) => infer T ? T : neve
 
 type ConcreteConstructor<T = {}> = new (...args: any[]) => T;
 
+/** True if this value is an iterable, that can produce an iterator. */
+export function isIterable<T>(x: any): x is Iterable<T> {
+    return typeof x === 'object' && x && typeof x[Symbol.iterator] === 'function'
+}
+
 /**
  * The exception thrown when `input()` goes wrong.  Includes the fundamental problem,
  * and a full path to where the issue lies.
@@ -36,23 +41,23 @@ export class ValidationError extends Error {
         public path: string[] = []
     ) {
         let msg = expectedPrefix ?? "Expected " + type.description
-        msg += ` but got: ${simplifiedToDisplay(simplify(valueEncountered))}`
+        msg += ` but got ${typeof valueEncountered}: ${simplifiedToDisplay(simplify(valueEncountered))}`
         super(msg);
         this.name = 'ValidationError';
         this.myMessage = msg
     }
 
-    // addPath(segment: string | number | symbol | undefined | null) {
-    //     this.path.push(String(segment));
-    //     this.message = this.fullMessage
-    // }
+    addPath(segment: string | number | symbol) {
+        this.path.push(String(segment));
+        this.message = this.fullMessage
+    }
 
-    // get fullMessage(): string {
-    //     const pathStr = this.path.length
-    //         ? `At key [${this.path.reverse().join('.')}]: `
-    //         : '';
-    //     return pathStr + this.myMessage;
-    // }
+    get fullMessage(): string {
+        const pathStr = this.path.length
+            ? `At key [${this.path.reverse().join('.')}]: `
+            : '';
+        return pathStr + this.myMessage;
+    }
 }
 
 export interface IDescriptive {
@@ -108,7 +113,7 @@ export abstract class SmartType<T = any, J extends JSONType = JSONType> implemen
     /**
      * Same as `input()` but returns errors as objects rather than throwing them.
      */
-    inputReturnError(x: unknown, strict: boolean): T | ValidationError {
+    inputReturnError(x: unknown, strict: boolean = true): T | ValidationError {
         try {
             return this.input(x, strict)
         } catch (e) {

@@ -42,9 +42,14 @@ class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends S
                     }
                 }
             }
-            // Field was present; convert it.
+            // Field was present; convert it.  Upon failure, accumulate our path
             else {
-                ent.push([k, t.input(y, strict)])
+                const z = t.inputReturnError(y, strict)
+                if (z instanceof ValidationError) {
+                    z.addPath(k)
+                    throw z
+                }
+                ent.push([k, z])
             }
         }
 
@@ -52,7 +57,7 @@ class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends S
         if (this.options.ignoreExtraFields === false) {
             for (const k of Object.keys(x)) {
                 if (!(k in this.types)) {
-                    throw new ValidationError(this, x, `Found spurious field [${k}]`)
+                    throw new ValidationError(this, x, `Found spurious field [${k}].  Valid fields are: [${this.fields.join('|')}]`)
                 }
             }
         }
@@ -83,6 +88,11 @@ class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends S
             )
         )
         return new SmartFields<{ [K in keyof ST]: SmartType<NativeFor<ST[K]> | undefined, JsonFor<ST[K]>> }>(newTypes as any, this.options)
+    }
+
+    /** Gets the sorted list of fields in this type. */
+    get fields(): string[] {
+        return Object.keys(this.types).sort()
     }
 }
 

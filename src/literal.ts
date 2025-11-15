@@ -5,7 +5,7 @@ class SmartLiteral<T extends Primative> extends SmartType<T, T> {
     constructor(
         public readonly values: readonly T[],
     ) {
-        super('(' + values.map(String).join('|') + ')')
+        super('(' + values.map(String).sort().join('|') + ')')
     }
 
     input(x: unknown, strict: boolean = true) {

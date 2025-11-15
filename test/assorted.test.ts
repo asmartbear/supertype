@@ -6,7 +6,7 @@ import { JS_UNDEFINED_SIGNAL } from "../src/undef"
 
 test('smart literal primative', () => {
     let ty = V.LITERAL("none", "left", "right", "both")
-    T.eq(ty.description, "(none|left|right|both)")
+    T.eq(ty.description, "(both|left|none|right)")
 
     // strict
     T.eq(ty.input("none"), "none")

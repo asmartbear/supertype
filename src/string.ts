@@ -28,7 +28,7 @@ class SmartString extends SmartType<string, string> {
     minLen(min: number) {
         return this.transformSameType(
             `minLen=${min}`,
-            (s) => { if (s.length < min) throw new ValidationError(this, s); return s }
+            (s) => { if (s.length < min) throw new ValidationError(this, s, `Expected string to be at least ${min} characters`); return s }
         )
     }
 
@@ -43,7 +43,7 @@ class SmartString extends SmartType<string, string> {
     match(re: RegExp) {
         return this.transformSameType(
             `re=${re}`,
-            (s) => { if (!re.test(s)) throw new ValidationError(this, s); return s }
+            (s) => { if (!re.test(s)) throw new ValidationError(this, s, `Expected string to match ${re}`); return s }
         )
     }
 
@@ -54,7 +54,7 @@ class SmartString extends SmartType<string, string> {
             (s) => {
                 const result = s.replaceAll(re, replacement as any)
                 if (failIfNoMatches && result == s) {        // if changed, it cannot be a match failure
-                    if (!s.match(re)) throw new ValidationError(this, s, "No match")
+                    if (!s.match(re)) throw new ValidationError(this, s, `Expected string to match ${re}`)
                 }
                 return result
             }
@@ -71,7 +71,7 @@ class SmartString extends SmartType<string, string> {
             resultType,
             (s: string) => {
                 const m = s.match(re)
-                if (!m) throw new ValidationError(this, s, `Expected regex to match: ${re}`)
+                if (!m) throw new ValidationError(this, s, `Expected string to match ${re}`)
                 return fTransform(m)
             }
         )

@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, JSONType, JSONTuple, NativeTupleFor, JsonTupleFor } from "./common"
+import { ValidationError, SmartType, JSONType, JSONTuple, NativeTupleFor, JsonTupleFor, isIterable } from "./common"
 
 class SmartTuple<ST extends readonly SmartType<any>[], J extends JSONTuple> extends SmartType<NativeTupleFor<ST>, J> {
 
@@ -12,10 +12,20 @@ class SmartTuple<ST extends readonly SmartType<any>[], J extends JSONTuple> exte
     // istanbul ignore next
     get constructorArgs() { return [this.types] }
 
-    input(x: unknown, strict: boolean): NativeTupleFor<ST> {
-        if (!Array.isArray(x)) throw new ValidationError(this, x, "Expected array")
-        if (x.length !== this.types.length) throw new ValidationError(this, x, "Tuple of the wrong length")
-        return x.map((y, i) => this.types[i].input(y, strict)) as NativeTupleFor<ST>
+    input(x: unknown, strict: boolean = true): NativeTupleFor<ST> {
+        if (!isIterable(x)) throw new ValidationError(this, x)
+        const a = Array.from(x)       // convert to Array even if it isn't already
+        if (a.length !== this.types.length) throw new ValidationError(this, x, "Tuple of the wrong length")
+        const result: any[] = []
+        for (let i = 0; i < this.types.length; ++i) {
+            const z = this.types[i].inputReturnError(a[i], strict)
+            if (z instanceof ValidationError) {
+                z.addPath(i)
+                throw z
+            }
+            result.push(z)
+        }
+        return result as NativeTupleFor<ST>
     }
 
     toJSON(x: NativeTupleFor<ST>): J {

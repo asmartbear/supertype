@@ -23,6 +23,13 @@ export function fails(strict: boolean, a: V.SmartType, ...x: unknown[]) {
     }
 }
 
+/** Tests that an input fails with a validation error whose text matches a regular expression */
+export function failsWithErrorRegex(ty: V.SmartType, x: unknown, expected: RegExp) {
+    const y = ty.inputReturnError(x)
+    T.isInstance(y, V.ValidationError)
+    T.eq(expected.test(y.message), true, `Expected error message to match ${expected}, but got: ${y.message}`)
+}
+
 export function toFromJSON<U, J extends V.JSONType>(m: V.IMarshallJson<U, J>, from: U, to: J) {
     const js = m.toJSON(from)
     T.eq(js, to)

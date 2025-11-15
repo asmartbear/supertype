@@ -1,6 +1,6 @@
 import * as T from "./testutil"
 import * as V from "../src/index"
-import { passes, fails, toFromJSON } from "./moreutil"
+import { passes, fails, toFromJSON, failsWithErrorRegex } from "./moreutil"
 
 test('smart fields', () => {
     let ty = V.OBJ({
@@ -157,15 +157,16 @@ test('big image configuration object', () => {
         inPrint: V.BOOL(),
         decorationFloatWidthIn: V.NUM(),
         decorationInlineHeightIn: V.NUM(),
-    }, { ignoreExtraFields: true }).partial();
+    }, { ignoreExtraFields: false }).partial();
 
+    // Validation and transformation
     T.eq(ty.input(
         { caption: "hi", figure: "my-picture", autocropEarly: true, width: 2.5, height: "full" }),
         { caption: "hi", figure: "my-picture", autocropEarly: true, width: 2.5, height: "full" }
     )
     T.eq(ty.input(
-        { grayscale: true, width: "bleed", height: 2, featured: "0.3 0.5" }),
-        { grayscale: true, width: "bleed", height: 2, featured: { cx: 0.5, cy: 0.3 } }
+        { grayscale: true, transparentColors: ["white"], width: "bleed", height: 2, featured: "0.3 0.5" }),
+        { grayscale: true, transparentColors: ["white"], width: "bleed", height: 2, featured: { cx: 0.5, cy: 0.3 } }
     )
     T.eq(ty.input(
         { crop: "auto", dark: "i180", border: "16px red", featured: "0.3 0.5 1.2" }),
@@ -180,4 +181,15 @@ test('big image configuration object', () => {
     T.throws(() => ty.input(
         { crop: "auto", dark: "i180", border: "16px red", featured: "10 0.5 1.2" }),
     )
+
+    // Error messages being helpful
+    failsWithErrorRegex(ty, { figure: "-picture" }, /.*\[figure\].+-picture/)
+    failsWithErrorRegex(ty, { transparentColors: "white" }, /.*\[transparentColors\].+\bExpected string\[\].+\bstring\b.+\bwhite/)
+    failsWithErrorRegex(ty, { transparentColors: ["white", 123] }, /.*\[transparentColors\.1\].+\bExpected string.+\bnumber\b.+123/)
+    failsWithErrorRegex(ty, { featured: "10 0.5 1.2" }, /.*\[featured\].+\bExpected/)
+    failsWithErrorRegex(ty, { taco: "good" }, /.*\[taco\].+\|comment\|.+\|format\|.+\|keepSvg\|.+\|width/)
+    failsWithErrorRegex(ty, { format: 123 }, /.*\[format\].+jpg\|png\|webp/)
+    failsWithErrorRegex(ty, { format: "taco" }, /.*\[format\].+jpg\|png\|webp/)
+    failsWithErrorRegex(ty, { height: "taco" }, /.*number.+full.+taco/)
+    failsWithErrorRegex(ty, { height: false }, /.*number.+full.+false/)
 })

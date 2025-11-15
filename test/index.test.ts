@@ -1,6 +1,6 @@
 import * as V from "../src/index"
 import * as T from "./testutil"
-import { passes, fails, toFromJSON } from "./moreutil"
+import { passes, fails, toFromJSON, failsWithErrorRegex } from "./moreutil"
 import { isPrimative } from "../src/common"
 import { JS_UNDEFINED_SIGNAL } from "../src/undef";
 
@@ -268,6 +268,9 @@ test('smart tuple x2', () => {
     T.throws(() => ty.fromJSON({} as any))
     T.throws(() => ty.fromJSON(true as any))
     T.eq(ty.toSimplified([1, "a"]), [1, "a"])
+
+    // Errors
+    failsWithErrorRegex(ty, [123, 123], /1.*string.*123/)
 })
 
 test('smart tuple x3', () => {

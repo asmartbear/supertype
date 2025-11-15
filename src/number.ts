@@ -47,7 +47,7 @@ class SmartNumber extends SmartType<number, number | "Inf" | "-Inf" | "NaN"> {
     min(min: number) {
         return this.transformSameType(
             `min=${min}`,
-            (x) => { if (x < min || Number.isNaN(x)) throw new ValidationError(this, x, "Beyond minimum"); return x }
+            (x) => { if (x < min || Number.isNaN(x)) throw new ValidationError(this, x, `Minimum threshold is ${min}`); return x }
         )
     }
 
@@ -55,7 +55,7 @@ class SmartNumber extends SmartType<number, number | "Inf" | "-Inf" | "NaN"> {
     max(max: number) {
         return this.transformSameType(
             `max=${max}`,
-            (x) => { if (x > max || Number.isNaN(x)) throw new ValidationError(this, x, "Beyond maximum"); return x }
+            (x) => { if (x > max || Number.isNaN(x)) throw new ValidationError(this, x, `Maximum threshold is ${max}`); return x }
         )
     }
 
@@ -75,7 +75,7 @@ class SmartNumber extends SmartType<number, number | "Inf" | "-Inf" | "NaN"> {
     int() {
         return this.transformSameType(
             `int`,
-            (x) => { if (!Number.isSafeInteger(x)) throw new ValidationError(this, x, "Not an integer"); return x }
+            (x) => { if (!Number.isSafeInteger(x)) throw new ValidationError(this, x, "Expected an integer"); return x }
         )
     }
 }
