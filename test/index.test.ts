@@ -256,6 +256,7 @@ test('smart tuple x2', () => {
     // strict
     passes(true, ty, [123, "foo"], [321, "123"])
     fails(true, ty, undefined, null, false, true, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, "", "a", "foo bar", "0", "123", "12bar", [], [1], [2, 1], [3, "a", 1], {}, { a: 1 }, { b: 2, a: 1 }, [321, "123", 0], ["123", 123])
+    T.eq(ty.input([123, "123"]), [123, "123"])
 
     // not strict
     T.eq(ty.input([123, 123], false), [123, "123"])

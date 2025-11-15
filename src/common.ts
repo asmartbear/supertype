@@ -45,6 +45,7 @@ export class ValidationError extends Error {
         super(msg);
         this.name = 'ValidationError';
         this.myMessage = msg
+        this.message = this.fullMessage
     }
 
     addPath(segment: string | number | symbol) {
