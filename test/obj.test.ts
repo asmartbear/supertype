@@ -1,6 +1,6 @@
 import * as T from "./testutil"
 import * as V from "../src/index"
-import { passes, fails, toFromJSON, failsWithErrorRegex } from "./moreutil"
+import { passes, fails, toFromJSON, failsWithErrorRegex, TestVisitor } from "./moreutil"
 
 test('smart fields', () => {
     let ty = V.OBJ({
@@ -11,6 +11,7 @@ test('smart fields', () => {
     T.eq(ty.description, "{x:number,s:string,b:boolean}")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, new Set(["x", "s", "b"]))
+    T.eq(ty.visit(TestVisitor.SINGLETON, { x: 1, s: "hi", b: false }), "[[s:x,n:1],[s:s,s:hi],[s:b,b:false]]")
 
     // strict
     passes(true, ty, { x: 0, s: "", b: false }, { x: 123, s: "cool", b: true })
@@ -53,6 +54,7 @@ test('smart fields with optional fields', () => {
     T.eq(ty.description, "{x:number?,s:string?,b:boolean}")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, new Set(["x", "s", "b"]))
+    T.eq(ty.visit(TestVisitor.SINGLETON, { x: 1, b: false }), "[[s:x,n:1],[s:b,b:false]]")
 
     T.eq(ty.input({ b: true }), { b: true }, "can just be missing")
     T.eq(ty.input({ b: true }), { x: undefined, s: undefined, b: true }, "can be explicitly set to undefined")
@@ -107,6 +109,7 @@ test('smart fields with extra fields provided', () => {
     }, { ignoreExtraFields: true })
     T.eq(allowExtra.input({ x: 123, y: 456 }), { x: 123 })
     T.eq(allowExtra.keys, new Set(["x"]))
+    T.eq(allowExtra.visit(TestVisitor.SINGLETON, { x: 1 }), "[[s:x,n:1]]")
 
     const noExtra = V.OBJ({
         x: V.NUM(),

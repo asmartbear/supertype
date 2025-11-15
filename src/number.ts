@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, JSONType } from "./common"
+import { ValidationError, SmartType, JSONType, SmartTypeVisitor } from "./common"
 
 /** The native `number` type */
 class SmartNumber extends SmartType<number, number | "Inf" | "-Inf" | "NaN"> {
@@ -21,6 +21,10 @@ class SmartNumber extends SmartType<number, number | "Inf" | "-Inf" | "NaN"> {
             }
         }
         throw new ValidationError(this, x)
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: number): U {
+        return visitor.visitNumber(x)
     }
 
     toJSON(x: number): number | "Inf" | "-Inf" | "NaN" {

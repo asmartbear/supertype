@@ -1,6 +1,6 @@
 import * as V from "../src/index"
 import * as T from "./testutil"
-import { passes, fails, toFromJSON, failsWithErrorRegex } from "./moreutil"
+import { passes, fails, toFromJSON, failsWithErrorRegex, TestVisitor } from "./moreutil"
 import { isPrimative } from "../src/common"
 import { JS_UNDEFINED_SIGNAL } from "../src/undef";
 
@@ -25,6 +25,7 @@ test('smart undefined', () => {
     T.eq(ty.description, "undefined")
     T.eq(ty.canBeUndefined, true)
     T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, undefined), "undefined")
 
     // strict
     passes(true, ty, undefined)
@@ -41,6 +42,7 @@ test('smart null', () => {
     T.eq(ty.description, "null")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, null), "null")
 
     // strict
     passes(true, ty, null)
@@ -57,6 +59,7 @@ test('smart boolean', () => {
     T.eq(ty.description, "boolean")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, true), "b:true")
 
     // strict
     passes(true, ty, false, true)
@@ -91,6 +94,7 @@ test('smart number', () => {
     T.eq(ty.description, "number")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, 123), "n:123")
 
     // strict
     passes(true, ty, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN)
@@ -141,6 +145,7 @@ test('smart string', () => {
     T.eq(ty.description, "string")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, "foo"), "s:foo")
 
     // strict
     passes(true, ty, "", "a", "foo bar", "foo\nbar")
@@ -228,6 +233,7 @@ test('smart array', () => {
     T.eq(ty.description, "number[]")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, [1, 2, 3]), "[n:1,n:2,n:3]")
 
     // strict
     passes(true, ty, [], [1], [2, 1])
@@ -260,6 +266,7 @@ test('smart tuple x2', () => {
     T.eq(ty.description, "[number,string]")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, new Set(["0", "1"]))
+    T.eq(ty.visit(TestVisitor.SINGLETON, [123, "foo"]), "[n:123,s:foo]")
 
     // strict
     passes(true, ty, [123, "foo"], [321, "123"])
@@ -288,6 +295,7 @@ test('smart tuple x3', () => {
     T.eq(ty.description, "[number,string,boolean]")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, new Set(["0", "1", "2"]))
+    T.eq(ty.visit(TestVisitor.SINGLETON, [123, "foo", false]), "[n:123,s:foo,b:false]")
 
     // strict
     passes(true, ty, [123, "foo", true], [321, "123", false])

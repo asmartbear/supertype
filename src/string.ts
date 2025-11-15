@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, NativeFor } from "./common"
+import { ValidationError, SmartType, NativeFor, SmartTypeVisitor } from "./common"
 
 class SmartString extends SmartType<string, string> {
 
@@ -12,6 +12,10 @@ class SmartString extends SmartType<string, string> {
             return String(x)
         }
         throw new ValidationError(this, x)
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: string): U {
+        return visitor.visitString(x)
     }
 
     toJSON(x: string): string {

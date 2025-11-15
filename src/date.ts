@@ -1,4 +1,4 @@
-import { ValidationError, SmartType } from "./common"
+import { ValidationError, SmartType, SmartTypeVisitor } from "./common"
 
 class SmartDate extends SmartType<Date, number> {
 
@@ -14,6 +14,10 @@ class SmartDate extends SmartType<Date, number> {
             return d
         }
         throw new ValidationError(this, x)
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: Date): U {
+        return visitor.visitDate(x)
     }
 
     toJSON(x: Date) {

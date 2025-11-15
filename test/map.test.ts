@@ -1,5 +1,5 @@
 import * as T from "./testutil"
-import { passes, fails, toFromJSON } from "./moreutil"
+import { passes, fails, toFromJSON, TestVisitor } from "./moreutil"
 import { MAP } from "../src/map"
 import { SET } from "../src/set"
 import { NUM } from "../src/number"
@@ -11,6 +11,7 @@ test("set", () => {
     T.eq(ty.description, "Set(number)")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, new Set([2, 1])), "[n:1,n:2]", "elements got sorted along the way")
 
     passes(true, ty, new Set([]), new Set([1]), new Set([1, 2, 3]))
     fails(true, ty, undefined, null, false, true, 0, -2, "", "foo", "new Map", new Set(["hi"]), new Map([["0", ""]]), new Map([["123", "abc"], ["0", ""]]))
@@ -43,6 +44,7 @@ test("map from map", () => {
     T.eq(ty.description, "{number:string}")
     T.eq(ty.canBeUndefined, false)
     T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, new Map([[2, "b"], [1, "a"]])), "[[n:1,s:a],[n:2,s:b]]", "elements got sorted along the way")
 
     passes(true, ty, new Map([]), new Map([[0, ""]]), new Map([[123, "abc"], [0, ""]]))
     fails(true, ty, undefined, null, false, true, 0, -2, "", "foo", "new Map", [], [1, 2, 3], new Map([["0", ""]]), new Map([["123", "abc"], ["0", ""]]))

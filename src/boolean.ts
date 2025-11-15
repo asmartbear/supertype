@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, JSONType } from "./common"
+import { ValidationError, SmartType, JSONType, SmartTypeVisitor } from "./common"
 
 /** The native `boolean` type */
 class SmartBoolean extends SmartType<boolean, boolean> {
@@ -18,6 +18,10 @@ class SmartBoolean extends SmartType<boolean, boolean> {
             return true
         }
         throw new ValidationError(this, x)
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: boolean): U {
+        return visitor.visitBoolean(x)
     }
 
     toJSON(x: boolean) {

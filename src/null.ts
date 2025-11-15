@@ -1,4 +1,4 @@
-import { ValidationError, SmartType } from "./common"
+import { ValidationError, SmartType, SmartTypeVisitor } from "./common"
 
 class SmartNull extends SmartType<null, null> {
 
@@ -9,6 +9,10 @@ class SmartNull extends SmartType<null, null> {
     input(x: unknown, strict: boolean = true): null {
         if (x === null) return null
         throw new ValidationError(this, x)
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: null): U {
+        return visitor.visitNull(x)
     }
 
     toJSON(x: any): null {

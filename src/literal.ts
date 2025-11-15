@@ -1,4 +1,4 @@
-import { ValidationError, Primative, SmartType, isPrimative, NativeFor, JsonFor, ValuesOf, JSONTuple, JSONType } from "./common"
+import { ValidationError, Primative, SmartType, isPrimative, NativeFor, JsonFor, ValuesOf, JSONTuple, JSONType, SmartTypeVisitor } from "./common"
 
 class SmartLiteral<T extends Primative> extends SmartType<T, T> {
 
@@ -19,6 +19,16 @@ class SmartLiteral<T extends Primative> extends SmartType<T, T> {
             }
         }
         throw new ValidationError(this, x)
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: T): U {
+        switch (typeof x) {
+            // case 'undefined': return visitor.visitUndefined(x)
+            case 'boolean': return visitor.visitBoolean(x)
+            case 'number': return visitor.visitNumber(x)
+            case 'string': return visitor.visitString(x)
+            case 'object': return visitor.visitNull(x)
+        }
     }
 
     toJSON(x: T): T {

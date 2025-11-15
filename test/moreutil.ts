@@ -35,3 +35,29 @@ export function toFromJSON<U, J extends V.JSONType>(m: V.IMarshallJson<U, J>, fr
     T.eq(js, to)
     T.eq(m.fromJSON(to), from)
 }
+
+export class TestVisitor extends V.SmartTypeVisitor<string> {
+    visitUndefined(x: undefined): string {
+        return "undefined"
+    }
+    visitNull(x: null): string {
+        return "null"
+    }
+    visitBoolean(x: boolean): string {
+        return `b:${x}`
+    }
+    visitNumber(x: number): string {
+        return `n:${x}`
+    }
+    visitString(x: string): string {
+        return `s:${x}`
+    }
+    visitOpaqueObject(x: object): string {
+        return `${x.constructor.name}()`
+    }
+    visitArray(x: string[]): string {
+        return '[' + x.join(',') + ']'
+    }
+
+    static SINGLETON = new TestVisitor()
+}

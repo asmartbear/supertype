@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, JSONType, NativeFor } from "./common"
+import { ValidationError, SmartType, JSONType, NativeFor, SmartTypeVisitor } from "./common"
 
 class SmartSet<T, ST extends SmartType<T>> extends SmartType<Set<T>, JSONType[]> {
 
@@ -17,6 +17,10 @@ class SmartSet<T, ST extends SmartType<T>> extends SmartType<Set<T>, JSONType[]>
         if (x instanceof Set) x = Array.from(x)
         if (Array.isArray(x)) return new Set(x.map(y => this.typ.input(y, strict)))
         throw new ValidationError(this, x, "Expected Array or Set")
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: Set<T>): U {
+        return visitor.visitSet(Array.from(x).sort().map(y => this.typ.visit(visitor, y)))
     }
 
     toJSON(x: Iterable<T>): JSONType[] {

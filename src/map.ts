@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, JSONType, NativeFor, JsonFor } from "./common"
+import { ValidationError, SmartType, JSONType, NativeFor, JsonFor, SmartTypeVisitor } from "./common"
 
 class SmartMap<
     K, V,
@@ -25,6 +25,14 @@ class SmartMap<
         }
         // Map from object
         return new Map(Object.entries(x).map(([k, v]) => [this.tKey.input(k, strict), this.tValue.input(v, strict)] as const))
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: Map<K, V>): U {
+        return visitor.visitMap(
+            Array.from(x).sort().map(
+                ([k, v]) => [this.tKey.visit(visitor, k), this.tValue.visit(visitor, v)]
+            )
+        )
     }
 
     toJSON(x: Map<K, V>): [JsonFor<KEY>, JsonFor<VALUE>][] {

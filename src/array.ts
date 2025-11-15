@@ -1,5 +1,5 @@
 import { isIterable } from '@asmartbear/simplified'
-import { ValidationError, SmartType, JSONType } from "./common"
+import { ValidationError, SmartType, JSONType, SmartTypeVisitor } from "./common"
 
 class SmartArray<T, J extends JSONType, EL extends SmartType<T, J>> extends SmartType<T[], J[]> {
 
@@ -24,6 +24,10 @@ class SmartArray<T, J extends JSONType, EL extends SmartType<T, J>> extends Smar
             result.push(z)
         }
         return result
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: T[]): U {
+        return visitor.visitArray(x.map(y => this.elementType.visit(visitor, y)))
     }
 
     toJSON(x: T[]) {

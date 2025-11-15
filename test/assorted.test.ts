@@ -1,12 +1,15 @@
 import * as T from "./testutil"
 import * as V from "../src/index"
-import { passes, fails, toFromJSON } from "./moreutil"
+import { passes, fails, toFromJSON, TestVisitor } from "./moreutil"
 import { JS_UNDEFINED_SIGNAL } from "../src/undef"
 import { simplifyOpaqueType } from "@asmartbear/simplified"
 
 test('smart literal primative', () => {
     let ty = V.LITERAL("none", "left", "right", "both")
     T.eq(ty.description, "(both|left|none|right)")
+    T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, "left"), "s:left")
 
     // strict
     T.eq(ty.input("none"), "none")
@@ -18,9 +21,24 @@ test('smart literal primative', () => {
     toFromJSON(ty, "both", "both")
 })
 
+test('smart literal with every type', () => {
+    let ty = V.LITERAL<"none" | 0 | "" | null | false>("none", 0, "", null, false)
+    T.eq(ty.description, "(|0|false|none|null)")
+    T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, 0), "n:0")
+    T.eq(ty.visit(TestVisitor.SINGLETON, ""), "s:")
+    T.eq(ty.visit(TestVisitor.SINGLETON, null), "null")
+    T.eq(ty.visit(TestVisitor.SINGLETON, false), "b:false")
+})
+
 test('smart optional without being embedded in an object', () => {
     let ty = V.OPT(V.NUM())
     T.eq(ty.description, "number?")
+    T.eq(ty.canBeUndefined, true)
+    T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, 123), "n:123")
+    T.eq(ty.visit(TestVisitor.SINGLETON, undefined), "undefined")
 
     // strict
     passes(true, ty, undefined, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN)
@@ -41,6 +59,10 @@ test('smart optional without being embedded in an object', () => {
 test('smart or with primatives', () => {
     let ty = V.OR(V.NUM(), V.STR())
     T.eq(ty.description, "(number|string)")
+    T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, 123), "n:123")
+    T.eq(ty.visit(TestVisitor.SINGLETON, "123"), "s:123")
 
     // strict
     passes(true, ty, 0, 1, -1, 123.4, -567.68, Number.EPSILON, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NaN, "", "a", "foo bar", "0", "123", "12bar")
@@ -67,6 +89,9 @@ test('smart or with primatives', () => {
 test('smart date', () => {
     let ty = V.DATE()
     T.eq(ty.description, "date")
+    T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, new Date(1234)), "Date()")
 
     // strict
     passes(true, ty, new Date(123456789))
@@ -92,6 +117,10 @@ test('smart class', () => {
     const b = new MyObjB()
     let ty = V.CLASS(MyObjA)
     T.eq(ty.description, "MyObjA")
+    T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, undefined)
+    T.eq(ty.visit(TestVisitor.SINGLETON, a), "MyObjA()")
+    T.eq(ty.visit(TestVisitor.SINGLETON, b), "MyObjB()")
 
     // validate
     passes(true, ty, a, b)

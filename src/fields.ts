@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, NativeFor, __DEFAULT_VALUE, JsonFor } from "./common"
+import { ValidationError, SmartType, NativeFor, __DEFAULT_VALUE, JsonFor, SmartTypeVisitor } from "./common"
 import { OPT } from "./alternation"
 
 export type FieldOptions = {
@@ -66,6 +66,14 @@ class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends S
             }
         }
         return Object.fromEntries(ent) as NativeFor<ST>
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: NativeFor<ST>): U {
+        return visitor.visitFields(
+            Object.entries(x).map(
+                ([k, v]) => [visitor.visitString(k), this.types[k].visit(visitor, v)]
+            )
+        )
     }
 
     toJSON(x: NativeFor<ST>): JsonFor<ST> {

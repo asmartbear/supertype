@@ -110,6 +110,30 @@ export interface IMarshallJson<T, J extends JSONType> {
     fromJSON(js: J): T
 }
 
+
+/**
+ * Callbacks for walking a type tree alongside parsed data, optionally accumulating some return value.
+ * 
+ * Some default implementations are given for built-in types, in case you don't care about how they are visited,
+ * for example many built-in objects are visited as opaque objects, tuples are visited as arrays, maps are visited
+ * as arrays of pairs.
+ */
+export abstract class SmartTypeVisitor<T> {
+    abstract visitUndefined(x: undefined): T
+    abstract visitNull(x: null): T
+    abstract visitBoolean(x: boolean): T
+    abstract visitNumber(x: number): T
+    abstract visitString(x: string): T
+    abstract visitOpaqueObject(x: object): T
+    abstract visitArray(x: T[]): T
+
+    visitTuple(x: T[]): T { return this.visitArray(x) }
+    visitDate(x: Date): T { return this.visitOpaqueObject(x) }
+    visitSet(x: T[]): T { return this.visitArray(x) }
+    visitMap(x: [T, T][]): T { return this.visitArray(x.map(pair => this.visitArray(pair))) }
+    visitFields(x: [T, T][]): T { return this.visitMap(x) }
+}
+
 /** Symbol used for the configured default value for the type, if any. */
 export const __DEFAULT_VALUE = Symbol('__DEFAULT_VALUE')
 
@@ -203,6 +227,7 @@ export abstract class SmartType<T = any, J extends JSONType = JSONType> implemen
     }
 
     abstract input(x: unknown, strict?: boolean): T;
+    abstract visit<U>(visitor: SmartTypeVisitor<U>, x: T): U;
     abstract toJSON(x: T): J;
     abstract fromJSON(js: JSONType): T;
 }

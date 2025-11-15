@@ -1,4 +1,4 @@
-import { ValidationError, SmartType, JSONType, NativeFor, JsonFor, NativeTupleFor } from "./common"
+import { ValidationError, SmartType, JSONType, NativeFor, JsonFor, NativeTupleFor, SmartTypeVisitor } from "./common"
 import { JS_UNDEFINED_SIGNAL } from "./undef"
 
 type AlternationJSON = {
@@ -28,6 +28,18 @@ class SmartAlternation<T> extends SmartType<T, AlternationJSON> {
             return y
         }
         throw new ValidationError(this, x)
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: T): U {
+        // Find the type that strictly accepts this value, then encode it in JSON
+        for (const t of this.types) {
+            try {
+                const y = t.toJSON(x)
+                return t.visit(visitor, x)
+            } catch { }
+        }
+        // istanbul ignore next
+        throw new ValidationError(this, x, "expected validated type for visitor")
     }
 
     toJSON(x: T): AlternationJSON {
@@ -70,6 +82,11 @@ class SmartOptional<T, J extends JSONType> extends SmartType<T | undefined, J | 
 
     get canBeUndefined() {
         return true
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: T): U {
+        if (x === undefined) return visitor.visitUndefined(undefined)
+        return this.typ.visit(visitor, x)
     }
 
     input(x: unknown, strict: boolean = true): T | undefined {

@@ -1,5 +1,5 @@
 import { getClassOf } from "@asmartbear/simplified";
-import { ValidationError, SmartType, JSONType } from "./common"
+import { ValidationError, SmartType, JSONType, SmartTypeVisitor } from "./common"
 
 /** Given a type, returns the Class of that type. */
 type ClassOf<T> = (abstract new (...args: any[]) => T) | (new (...args: any[]) => T);
@@ -20,6 +20,10 @@ class SmartClass<T extends object> extends SmartType<T, null> {
 
     toSimplified(x: T) {
         return `[${getClassOf<any>(x)?.name ?? this.cls.name}]`
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: T): U {
+        return visitor.visitOpaqueObject(x)
     }
 
     input(x: unknown, _?: boolean): T {

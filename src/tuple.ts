@@ -1,5 +1,5 @@
 import { isIterable } from '@asmartbear/simplified'
-import { ValidationError, SmartType, JSONType, JSONTuple, NativeTupleFor, JsonTupleFor } from "./common"
+import { ValidationError, SmartType, JSONType, JSONTuple, NativeTupleFor, JsonTupleFor, SmartTypeVisitor } from "./common"
 
 class SmartTuple<ST extends readonly SmartType<any>[], J extends JSONTuple> extends SmartType<NativeTupleFor<ST>, J> {
 
@@ -32,6 +32,12 @@ class SmartTuple<ST extends readonly SmartType<any>[], J extends JSONTuple> exte
             result.push(z)
         }
         return result as NativeTupleFor<ST>
+    }
+
+    visit<U>(visitor: SmartTypeVisitor<U>, x: NativeTupleFor<ST>): U {
+        return visitor.visitTuple(
+            x.map((y, i) => this.types[i].visit(visitor, y))
+        )
     }
 
     toJSON(x: NativeTupleFor<ST>): J {
