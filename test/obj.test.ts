@@ -10,6 +10,7 @@ test('smart fields', () => {
     })
     T.eq(ty.description, "{x:number,s:string,b:boolean}")
     T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, new Set(["x", "s", "b"]))
 
     // strict
     passes(true, ty, { x: 0, s: "", b: false }, { x: 123, s: "cool", b: true })
@@ -32,6 +33,7 @@ test('smart fields with defaults', () => {
     })
     T.eq(ty.description, "{x:number=123,s:string=hi>>re=/hi/g->there,b:boolean=false}")
     T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, new Set(["x", "s", "b"]))
 
     T.eq(ty.input({}), { x: 123, s: "hi", b: false }, "default means we don't run the replacement")
     T.eq(ty.input({ s: "taco" }), { x: 123, s: "taco", b: false }, "replacement didn't match")
@@ -50,6 +52,7 @@ test('smart fields with optional fields', () => {
     })
     T.eq(ty.description, "{x:number?,s:string?,b:boolean}")
     T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, new Set(["x", "s", "b"]))
 
     T.eq(ty.input({ b: true }), { b: true }, "can just be missing")
     T.eq(ty.input({ b: true }), { x: undefined, s: undefined, b: true }, "can be explicitly set to undefined")
@@ -66,6 +69,7 @@ test('smart fields with null objects', () => {
     })
     T.eq(ty.description, "{dn:(date|null),du:date?}")
     T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, new Set(["dn", "du"]))
 
     T.eq(ty.input({ dn: new Date(1234), du: new Date(6789) }), { dn: new Date(1234), du: new Date(6789) })
     T.eq(ty.input({ dn: null, du: new Date(6789) }), { dn: null, du: new Date(6789) })
@@ -85,6 +89,7 @@ test('smart fields made partial', () => {
     })
     T.eq(ty.description, "{x:number,s:string?,b:boolean}")
     T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, new Set(["x", "s", "b"]))
 
     let opt = ty.partial()
     T.eq(opt.description, "{x:number?,s:string?,b:boolean?}")
@@ -101,11 +106,13 @@ test('smart fields with extra fields provided', () => {
         x: V.NUM(),
     }, { ignoreExtraFields: true })
     T.eq(allowExtra.input({ x: 123, y: 456 }), { x: 123 })
+    T.eq(allowExtra.keys, new Set(["x"]))
 
     const noExtra = V.OBJ({
         x: V.NUM(),
     }, { ignoreExtraFields: false })
     T.throws(() => noExtra.input({ x: 123, y: 456 }))
+    T.eq(noExtra.keys, new Set(["x"]))
 })
 
 test('big image configuration object', () => {
@@ -158,6 +165,13 @@ test('big image configuration object', () => {
         decorationFloatWidthIn: V.NUM(),
         decorationInlineHeightIn: V.NUM(),
     }, { ignoreExtraFields: false }).partial();
+
+    // Keys
+    const keys = ty.keys
+    T.defined(keys)
+    T.eq(keys.size, 36)
+    T.eq(keys.has("inPrint"), true)
+    T.eq(keys.has("inprint"), false)
 
     // Validation and transformation
     T.eq(ty.input(

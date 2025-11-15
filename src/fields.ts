@@ -19,6 +19,10 @@ class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends S
     // istanbul ignore next
     get constructorArgs() { return [this.types, this.options] }
 
+    get keys() {
+        return new Set(Object.keys(this.types))
+    }
+
     input(x: unknown, strict: boolean = true) {
         if (typeof x !== "object") throw new ValidationError(this, x, "Expected object")
         if (!x) throw new ValidationError(this, x, "Got null instead of object")

@@ -12,6 +12,11 @@ class SmartTuple<ST extends readonly SmartType<any>[], J extends JSONTuple> exte
     // istanbul ignore next
     get constructorArgs() { return [this.types] }
 
+    get keys() {
+        // Our numeric indicies are effectively keys.
+        return new Set(this.types.map((_, i) => i.toString()))
+    }
+
     input(x: unknown, strict: boolean = true): NativeTupleFor<ST> {
         if (!isIterable(x)) throw new ValidationError(this, x)
         const a = Array.from(x)       // convert to Array even if it isn't already

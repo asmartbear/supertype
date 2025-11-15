@@ -183,6 +183,11 @@ export abstract class SmartType<T = any, J extends JSONType = JSONType> implemen
     /** If true, this type can potentially be `undefined`, otherwise it is never undefined. */
     get canBeUndefined(): boolean { return false }
 
+    /** If this type has an index-like structure, like fields, this is the set of keys in that structure, otherwise it is `undefined`. */
+    get keys(): Set<string> | undefined {
+        return undefined
+    }
+
     abstract input(x: unknown, strict?: boolean): T;
     abstract toJSON(x: T): J;
     abstract fromJSON(js: JSONType): T;

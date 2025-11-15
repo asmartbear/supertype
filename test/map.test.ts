@@ -10,6 +10,7 @@ test("set", () => {
     const ty = SET(NUM())
     T.eq(ty.description, "Set(number)")
     T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, undefined)
 
     passes(true, ty, new Set([]), new Set([1]), new Set([1, 2, 3]))
     fails(true, ty, undefined, null, false, true, 0, -2, "", "foo", "new Map", new Set(["hi"]), new Map([["0", ""]]), new Map([["123", "abc"], ["0", ""]]))
@@ -41,6 +42,7 @@ test("map from map", () => {
     const ty = MAP(NUM(), STR())
     T.eq(ty.description, "{number:string}")
     T.eq(ty.canBeUndefined, false)
+    T.eq(ty.keys, undefined)
 
     passes(true, ty, new Map([]), new Map([[0, ""]]), new Map([[123, "abc"], [0, ""]]))
     fails(true, ty, undefined, null, false, true, 0, -2, "", "foo", "new Map", [], [1, 2, 3], new Map([["0", ""]]), new Map([["123", "abc"], ["0", ""]]))
@@ -65,6 +67,7 @@ test("map from map", () => {
 
 test("map from object, even if strict", () => {
     const ty = MAP(STR(), BOOL())
+    T.eq(ty.keys, undefined)
 
     T.eq(ty.input({}), new Map())
     T.eq(ty.input({ a: false }), new Map([["a", false]]))
