@@ -1,4 +1,4 @@
-import { Simple, simplifiedToDisplay, simplifiedToHash, simplify, simplifyOpaqueType } from "@asmartbear/simplified";
+import { Simple, ISimplifiable, simplifiedToDisplay, simplifiedToHash, simplify, simplifyOpaqueType } from "@asmartbear/simplified";
 
 export type Primative = boolean | number | string | null
 export type JSONType = null | boolean | string | number | JSONType[] | { [K: string]: JSONType } | { [K: number]: JSONType }
@@ -31,7 +31,7 @@ export function isIterable<T>(x: any): x is Iterable<T> {
  * The exception thrown when `input()` goes wrong.  Includes the fundamental problem,
  * and a full path to where the issue lies.
  */
-export class ValidationError extends Error {
+export class ValidationError extends Error implements ISimplifiable<string> {
     private readonly myMessage: string
 
     constructor(
@@ -58,6 +58,10 @@ export class ValidationError extends Error {
             ? `At key [${this.path.reverse().join('.')}]: `
             : '';
         return pathStr + this.myMessage;
+    }
+
+    toSimplified() {
+        return this.fullMessage
     }
 }
 
@@ -104,7 +108,7 @@ export const __DEFAULT_VALUE = Symbol('__DEFAULT_VALUE')
  * A type capable of parsing, validating, conversion, marshalling, and more.
  * Represents a specific Typescript type on input and output.
  */
-export abstract class SmartType<T = any, J extends JSONType = JSONType> implements INativeParser<T>, IMarshallJson<T, J> {
+export abstract class SmartType<T = any, J extends JSONType = JSONType> implements INativeParser<T>, IMarshallJson<T, J>, ISimplifiable<Simple> {
 
     /** If not `undefined`, a default value to use in things like structured fields, if it is missing. */
     [__DEFAULT_VALUE]: T | undefined = undefined
@@ -132,8 +136,9 @@ export abstract class SmartType<T = any, J extends JSONType = JSONType> implemen
         return this
     }
 
-    /** Gets the simplified version of this data (a la `@asmartbear/simplified`) */
-    toSimplified(x: T): Simple {
+    /** Gets the simplified version of this data (a la `@asmartbear/simplified`), or a description of self if no argument is provided */
+    toSimplified(x?: T): Simple {
+        if (x === undefined) return this.description
         return simplifyOpaqueType(x)        // don't need a type system for this per se, but could potentially tweak this based on configuration
     }
 

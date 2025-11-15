@@ -269,6 +269,7 @@ test('smart tuple x2', () => {
     T.throws(() => ty.fromJSON({} as any))
     T.throws(() => ty.fromJSON(true as any))
     T.eq(ty.toSimplified([1, "a"]), [1, "a"])
+    T.eq(ty.toSimplified(undefined), "[number,string]")
 
     // Errors
     failsWithErrorRegex(ty, [123, 123], /1.*string.*123/)

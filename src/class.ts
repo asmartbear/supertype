@@ -1,3 +1,4 @@
+import { getClassOf } from "@asmartbear/simplified";
 import { ValidationError, SmartType, JSONType } from "./common"
 
 /** Given a type, returns the Class of that type. */
@@ -18,11 +19,17 @@ class SmartClass<T extends object> extends SmartType<T, null> {
     get constructorArgs() { return [this.cls] }
 
     input(x: unknown, _?: boolean): T {
+        // The only valid thing: The object is an instance of the class
         if (x instanceof this.cls) return x
-        if (typeof x === 'object' && x !== null) {     // if an object, can report its class
-            throw new ValidationError(this, x, `Expected instance of ${this.cls.name} rather than ${x.constructor.name}`)
+
+        // Check for the common case of it being another object with a class, because the error message can be nice.
+        const classOf = getClassOf<any>(x)
+        if (classOf) {     // if an object, can report its class
+            throw new ValidationError(this, x, `Expected instance of ${this.cls.name} rather than ${classOf.name}`)
         }
-        throw new ValidationError(this, x, `Expected instance of ${this.cls.name}`)     // generic type failure
+
+        // Catch-all error
+        throw new ValidationError(this, x, `Expected instance of ${this.cls.name}`)
 
     }
 

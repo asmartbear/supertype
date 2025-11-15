@@ -37,7 +37,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@asmartbear/simplified": "^1.0.5"
+    "@asmartbear/simplified": "^1.0.7"
   },
   "license": "MIT",
   "repository": {

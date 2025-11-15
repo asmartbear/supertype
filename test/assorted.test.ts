@@ -2,6 +2,7 @@ import * as T from "./testutil"
 import * as V from "../src/index"
 import { passes, fails, toFromJSON } from "./moreutil"
 import { JS_UNDEFINED_SIGNAL } from "../src/undef"
+import { simplifyOpaqueType } from "@asmartbear/simplified"
 
 test('smart literal primative', () => {
     let ty = V.LITERAL("none", "left", "right", "both")
@@ -77,6 +78,7 @@ test('smart date', () => {
     T.eq(ty.input("2025-11-14T12:34:56+0000"), new Date(Date.UTC(2025, 11 - 1, 14, 12, 34, 56)))
     T.eq(ty.input("2025-11-14T12:34:56Z"), new Date(Date.UTC(2025, 11 - 1, 14, 12, 34, 56)))
     T.throws(() => ty.input("12:34:56+00"))
+    T.eq(simplifyOpaqueType(ty.inputReturnError("12:34:56+00")), "Invalid Date string but got string: 12:34:56+00")
 
     // JSON
     toFromJSON(ty, new Date(1234567890), 1234567890)

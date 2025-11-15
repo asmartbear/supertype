@@ -1,3 +1,4 @@
+import { getClassOf, isClassObject, isPlainObject } from '@asmartbear/simplified'
 import { ValidationError, ValuesOf, SmartType, JSONType, NativeFor, JsonFor, Primative, isPrimative } from "./common"
 import { BOOL } from "./boolean"
 import { UNDEF } from "./undef"
@@ -17,14 +18,6 @@ type HasFunction<T> = {
 
 /** Given a class, returns the instance-type that it creates. */
 type InstanceOf<C> = C extends ClassOf<infer T> ? T : never;
-
-/** True of the object is a class */
-function isClassObject(obj: any): obj is Function {
-    // istanbul ignore next
-    if (typeof obj !== 'function') return false;
-    const prototype = obj.prototype && Object.getPrototypeOf(obj.prototype);
-    return prototype && typeof prototype.constructor === 'function';
-}
 
 /** The smart type corresponding to a given native type */
 export type SmartTypeFrom<T> =
@@ -55,7 +48,7 @@ export function reverseEngineerType<T>(x: T, options?: FieldOptions): SmartTypeF
         // Mostly no, but catch classes
         case 'function':
             if (isClassObject(x)) {
-                return CLASS(x as any) as any
+                return CLASS(x) as any
             }
             throw new Error(`Unsupported native type for reverse-engineering a data type: ${typeof x}`)
 
@@ -69,12 +62,12 @@ export function reverseEngineerType<T>(x: T, options?: FieldOptions): SmartTypeF
                 }
                 return ARRAY(reverseEngineerType(x[0], options)) as any
             }
-            // Direct class-derived objects have a prototype
-            const proto = Object.getPrototypeOf(x)
-            if (proto && proto !== Object.prototype) {
-                return CLASS((x as any).constructor) as any
+            // Direct class-derived objects are simply validated that they are that type of object
+            const derivedClass = getClassOf(x)
+            if (derivedClass) {
+                return CLASS(derivedClass) as any
             }
-            // Fields
+            // Remaining objects are treated as generic fields
             return OBJ(Object.fromEntries(
                 Object.entries(x).map(
                     ([k, v]) => [k, reverseEngineerType(v, options)]
