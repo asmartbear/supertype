@@ -20,13 +20,6 @@ export type ClassOf<T> = (new (...args: any[]) => T);
  */
 export type InstanceOf<C> = C extends new (...args: any[]) => infer T ? T : never;
 
-/** Converts fields that can possible by undefined, to also be explicitly optional in Typescript */
-export type UndefinedFieldsAreOptional<T> = {
-    [K in keyof T as undefined extends T[K] ? K : never]?: Exclude<T[K], undefined>
-} & {
-    [K in keyof T as undefined extends T[K] ? never : K]: T[K]
-};
-
 type ConcreteConstructor<T = {}> = new (...args: any[]) => T;
 
 /**

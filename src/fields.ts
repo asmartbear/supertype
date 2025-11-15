@@ -1,4 +1,5 @@
 import { ValidationError, SmartType, JSONType, NativeFor, __DEFAULT_VALUE, JsonFor } from "./common"
+import { OPT } from "./alternation"
 
 class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends SmartType<NativeFor<ST>, JsonFor<ST>> {
 
@@ -56,6 +57,16 @@ class SmartFields<ST extends { readonly [K: string]: SmartType<any> }> extends S
                 ([k, y]) => [k, y === undefined ? undefined : this.types[k].fromJSON(y)]
             )
         ) as NativeFor<ST>
+    }
+
+    /** Makes all fields optional */
+    partial() {
+        const newTypes = Object.fromEntries(
+            Object.entries(this.types).map(
+                ([k, t]) => [k, OPT(t)]
+            )
+        )
+        return new SmartFields<{ [K in keyof ST]: SmartType<NativeFor<ST[K]> | undefined, JsonFor<ST[K]>> }>(newTypes as any)
     }
 }
 
