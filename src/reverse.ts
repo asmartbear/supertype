@@ -1,16 +1,79 @@
+import { ValidationError, SmartType, JSONType, NativeFor, JsonFor, Primative, isPrimative } from "./common"
+import { BOOL } from "./boolean"
+import { UNDEF } from "./undef"
+import { NUM } from "./number"
+import { STR } from "./string"
+import { NIL } from "./null"
+import { ARRAY } from "./array"
+import { CLASS } from "./class"
+import { OBJ, FieldOptions } from "./fields"
 
-// /**
-//  * Is an object that contains at least one function?
-//  */
-// type HasFunction<T> = {
-//     [K in keyof T]: T[K] extends (...args: any[]) => any ? true : never;
-// }[keyof T] extends never ? false : true;
+/** Given a type, returns the Class of that type. */
+type ClassOf<T> = (abstract new (...args: any[]) => T) | (new (...args: any[]) => T);
 
-// function isClassObject(obj: any): boolean {
-//     if (typeof obj !== 'function') return false;
-//     const prototype = Object.getPrototypeOf(obj.prototype);
-//     return prototype && typeof prototype.constructor === 'function';
-// }
+type HasFunction<T> = {
+    [K in keyof T]: T[K] extends (...args: any[]) => any ? true : never;
+}[keyof T] extends never ? false : true;
+
+/** Given a class, returns the instance-type that it creates. */
+type InstanceOf<C> = C extends ClassOf<infer T> ? T : never;
+
+/** True of the object is a class */
+function isClassObject(obj: any): obj is Function {
+    if (typeof obj !== 'function') return false;
+    const prototype = Object.getPrototypeOf(obj.prototype);
+    return prototype && typeof prototype.constructor === 'function';
+}
+
+// export type SmartTypeFrom<T> =
+//     T extends undefined ? ReturnType<typeof UNDEF> :
+//     T extends null ? ReturnType<typeof NIL> :
+//     T extends boolean ? ReturnType<typeof BOOL> :
+//     T extends number ? ReturnType<typeof NUM> :
+//     T extends string ? ReturnType<typeof STR> :
+//     T extends Array<infer U> ? SmartType<U[]> :
+//     T extends { [K in keyof T]: T[K] } ? SmartType<{ [K in keyof T]: T[K] }> :
+//     never;
+
+/**
+ * Given an instantiated Javascript object, attempts to reverse-engineer the smart-type that matches it.
+ * 
+ * @param x the object to match
+ * @param options optional options for creating types
+ */
+export function reverseEngineerType<T>(x: T, options?: FieldOptions): SmartType<T> {
+    switch (typeof x) {
+        case 'undefined': return UNDEF() as any
+        case 'boolean': return BOOL() as any
+        case 'number': return NUM() as any
+        case 'string': return STR() as any
+
+        case 'object':
+            // null
+            if (x === null) return NIL() as any
+            // Arrays
+            if (Array.isArray(x)) {
+                if (x.length == 0) {
+                    throw new Error(`Arrays cannot be empty for reverse-engineering`)
+                }
+                return ARRAY(reverseEngineerType(x[0], options)) as any
+            }
+            // Direct class-derived objects have a prototype
+            const proto = Object.getPrototypeOf(x)
+            if (proto && proto !== Object.prototype) {
+                return CLASS((x as any).constructor) as any
+            }
+            // Fields
+            return OBJ(Object.fromEntries(
+                Object.entries(x).map(
+                    ([k, v]) => [k, reverseEngineerType(v, options)]
+                )
+            ), options) as any
+        default:
+            throw new Error(`Unsupported native type for reverse-engineering a data type: ${typeof x}`)
+    }
+}
+
 
 // /**
 //  * The validator type that is the result of attempting to reverse-engineer an instantiated value.
