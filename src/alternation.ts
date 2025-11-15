@@ -1,4 +1,5 @@
-import { ValidationError, INativeParser, SmartType, JSONType, NativeFor, JsonFor } from "./common"
+import { ValidationError, SmartType, JSONType, NativeFor, JsonFor } from "./common"
+import { UNDEF } from "./undef"
 
 type AlternationJSON<J extends JSONType> = {
     t: string,
@@ -15,6 +16,10 @@ class SmartAlternation<ST extends SmartType<any>[]> extends SmartType<NativeFor<
 
     // istanbul ignore next
     get constructorArgs() { return [this.types] }
+
+    get canBeUndefined() {
+        return !!this.types.find(t => t.canBeUndefined)         // yes if any of the types is undefined
+    }
 
     input(x: unknown, strict: boolean = true): NativeFor<ST> {
         for (const t of this.types) {
@@ -49,4 +54,12 @@ class SmartAlternation<ST extends SmartType<any>[]> extends SmartType<NativeFor<
 /** Any of these types are acceptable. */
 export function OR<ST extends SmartType<any>[]>(...types: ST) {
     return new SmartAlternation(types)
+}
+
+/** 
+ * Returns an "OR" of the given type and `undefined`, like an optional field in an object.
+ * If the type can already be undefined, returns the original object.
+ */
+export function OPT<T>(typ: SmartType<T>): SmartType<T | undefined, JSONType> {
+    return typ.canBeUndefined ? typ : OR(typ, UNDEF())
 }

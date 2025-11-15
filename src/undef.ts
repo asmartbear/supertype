@@ -8,6 +8,8 @@ class SmartUndefined extends SmartType<undefined, typeof JS_UNDEFINED_SIGNAL> {
         super("undefined")
     }
 
+    get canBeUndefined() { return true }
+
     input(x: unknown, strict: boolean = true): undefined {
         if (typeof x === "undefined") return x
         throw new ValidationError(this, x)

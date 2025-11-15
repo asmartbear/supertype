@@ -20,6 +20,13 @@ export type ClassOf<T> = (new (...args: any[]) => T);
  */
 export type InstanceOf<C> = C extends new (...args: any[]) => infer T ? T : never;
 
+/** Converts any undefined fields to also be explicitly optional in Typescript */
+export type UndefinedFieldsAreOptional<T> = {
+    [K in keyof T as undefined extends T[K] ? K : never]?: Exclude<T[K], undefined>
+} & {
+    [K in keyof T as undefined extends T[K] ? never : K]: T[K]
+};
+
 type ConcreteConstructor<T = {}> = new (...args: any[]) => T;
 
 /**
@@ -159,6 +166,9 @@ export abstract class SmartType<T = any, J extends JSONType = JSONType> implemen
 
     get constructorArgs(): any[] { return [this.description] }
 
+    /** If true, this type can potentially be `undefined`, otherwise it is never undefined. */
+    get canBeUndefined(): boolean { return false }
+
     abstract input(x: unknown, strict?: boolean): T;
     abstract toJSON(x: T): J;
     abstract fromJSON(js: JSONType): T;
@@ -200,7 +210,7 @@ export function transformer<T, TYPE extends SmartType<T>>(
 export type NativeFor<ST> =
     ST extends SmartType<infer T, any> ? T
     : ST extends SmartType[] ? NativeFor<ValuesOf<ST>>
-    : ST extends { readonly [K: string]: SmartType } ? { [K in keyof ST]: NativeFor<ST[K]>; }
+    : ST extends { readonly [K: string]: SmartType } ? UndefinedFieldsAreOptional<{ [K in keyof ST]: NativeFor<ST[K]>; }>
     : never;
 
 /**
