@@ -1,6 +1,6 @@
 {
   "name": "@asmartbear/smarttype",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Data types that parse, validate, transform, marshal, compare, and hash",
   "keywords": [
     "json"
@@ -37,7 +37,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@asmartbear/simplified": "^1.0.4"
+    "@asmartbear/simplified": "^1.0.5"
   },
   "license": "MIT",
   "repository": {
